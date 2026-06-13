@@ -1,10 +1,10 @@
 //@name AssetMommy
-//@display-name Asset Mommy 1.0.2
-//@version 1.0.2
+//@display-name Asset Mommy 1.0.3
+//@version 1.0.3
 //@api 3.0
 //@update-url https://raw.githubusercontent.com/aredsea/asset-mommy/main/asset-mommy.js
 //@description NovelAI 에셋 생성·관리 + 외견 추출기. iOS RisuAI 최적화.
-// Asset Mommy 1.0.2 — fork base: Asset maid 0.9.1 (NovelAIAutoAsset).
+// Asset Mommy 1.0.3 — fork base: Asset maid 0.9.1 (NovelAIAutoAsset).
 // Includes iOS RisuAI fixes: char enrichment via getCharacterFromIndex,
 // dedup lb-xnai.lb.extra, JSON parser robustness, cache invalidation.
 
@@ -34456,7 +34456,7 @@ body.naa-stream-image-guard-active .default-chat-screen .chat-message-container:
             }
         } catch (e) { console.log('[NAA-DB] dump err: ' + (e && e.message)); }
 
-        // [Asset Mommy 1.0.2] 다중 경로 enrichment.
+        // [Asset Mommy 1.0.3] 다중 경로 enrichment.
         // getCharacterFromIndex(i) + getCharacter()(현재 선택 캐릭터, 에셋 저장 경로와 동일).
         // 둘 중 하나라도 풀 데이터를 반환하면 그걸 사용.
         let currentChar = null;
@@ -52995,7 +52995,7 @@ ${embeddedTagTesterBlobImageScript}
         }
     }
 
-    // [Asset Mommy 1.0.2] 모바일 우선 글로벌 CSS 주입.
+    // [Asset Mommy 1.0.3] 모바일 우선 글로벌 CSS 주입.
     // 기존 데스크톱 위주의 inline CSS를 480px 이하 화면에서 압도적으로 덮음.
     // initialize() 진입 즉시 head에 1회 inject — 이후 모든 UI 렌더에 자동 적용.
     function injectMobileFirstOverrides() {
@@ -53745,31 +53745,11 @@ ${embeddedTagTesterBlobImageScript}
                     methods.push('setCharacterToIndex(' + idx + ')');
                 } catch (e) { console.log('[LBX-SAVE] setCharacterToIndex err: ' + (e && e.message)); }
             }
-            // 3) setDatabase/setDatabaseLite — 최후 dirty 마킹. 전체 db를 가져와 char 주입 후 통째로 set.
-            //    이게 RisuAI 내부 autosave $effect를 가장 확실히 트리거.
-            try {
-                if (typeof Risu.getDatabase === 'function') {
-                    const db = await Risu.getDatabase();
-                    if (db && db.characters) {
-                        if (Array.isArray(db.characters) && idx >= 0) {
-                            db.characters[idx] = char;
-                        } else if (typeof db.characters === 'object') {
-                            const keys = Object.keys(db.characters);
-                            if (idx >= 0 && keys[idx]) db.characters[keys[idx]] = char;
-                            else if (keys.length === 1) db.characters[keys[0]] = char;
-                        }
-                        if (typeof Risu.setDatabase === 'function') {
-                            await Risu.setDatabase(db);
-                            saved = true;
-                            methods.push('setDatabase');
-                        } else if (typeof Risu.setDatabaseLite === 'function') {
-                            await Risu.setDatabaseLite(db);
-                            saved = true;
-                            methods.push('setDatabaseLite');
-                        }
-                    }
-                }
-            } catch (e) { console.log('[LBX-SAVE] setDatabase err: ' + (e && e.message)); }
+            // [Asset Mommy 1.0.3] ★보안 critical★ — setDatabase 전체 덮어쓰기 패턴 제거.
+            // RisuAI 보안 업데이트 후 getDatabase()가 plugins 필드를 제외한 stub을 반환하므로,
+            // setDatabase(db)로 통째 덮어쓰면 plugins가 undefined가 되어 모든 플러그인이 삭제됨
+            // (자기 자신 포함). setCharacter/setCharacterToIndex는 RisuAI 내부에서 안전한
+            // setDatabaseLite를 호출하므로 그것만으로 충분.
 
             if (!saved) throw new Error('캐릭터 저장 API를 사용할 수 없습니다.');
             console.log('[LBX-SAVE] saved via [' + methods.join(', ') + '], idx=' + idx);
@@ -53801,7 +53781,7 @@ ${embeddedTagTesterBlobImageScript}
             if (existing) existing.remove();
         }
 
-        // [Asset Mommy 1.0.2] 모바일 친화 모달 — 좁은 화면에서 거의 풀스크린.
+        // [Asset Mommy 1.0.3] 모바일 친화 모달 — 좁은 화면에서 거의 풀스크린.
         // 터치 타겟 44px+, 큰 폰트, single column, safe-area-inset 대응.
         function lbxModalShell(innerHtml) {
             lbxRemoveModal();
@@ -53845,7 +53825,7 @@ ${embeddedTagTesterBlobImageScript}
             if (b) b.innerHTML = html;
         }
 
-        // [Asset Mommy 1.0.2] 모든 lb-xnai.lb.extra 인덱스 (중복 정리용)
+        // [Asset Mommy 1.0.3] 모든 lb-xnai.lb.extra 인덱스 (중복 정리용)
         function lbxFindAllExtraIndices(char) {
             const lore = Array.isArray(char && char.globalLore) ? char.globalLore : [];
             const out = [];
@@ -53855,7 +53835,7 @@ ${embeddedTagTesterBlobImageScript}
             return out;
         }
 
-        // [Asset Mommy 1.0.2] 개별 extra 항목 삭제. 같은 dedup 패턴 — 인덱스 무관하게
+        // [Asset Mommy 1.0.3] 개별 extra 항목 삭제. 같은 dedup 패턴 — 인덱스 무관하게
         // 지정 content와 일치하는 항목만 제거 후 setCharacter 전체 save.
         async function lbxDeleteExtraAtIndex(targetIdx) {
             const { char, idx } = await lbxGetActiveCharacterWithIndex();
@@ -53880,7 +53860,7 @@ ${embeddedTagTesterBlobImageScript}
             return fresh;
         }
 
-        // [Asset Mommy 1.0.2] 한방 정리 — 모든 extra 제거
+        // [Asset Mommy 1.0.3] 한방 정리 — 모든 extra 제거
         async function lbxDeleteAllExtras() {
             const { char, idx } = await lbxGetActiveCharacterWithIndex();
             let fresh = null;
@@ -53930,7 +53910,7 @@ ${embeddedTagTesterBlobImageScript}
                 ? '<div style="color:#ffc757;font-size:12px;">⚠ 활성화된 모듈이 감지되지 않았습니다. 등장인물 정보가 모듈에 있다면, 추출 전에 해당 모듈을 채팅/글로벌에 활성화하세요.</div>'
                 : '';
 
-            // [Asset Mommy 1.0.2] manage 섹션 — 기존 lb-xnai.lb.extra 항목 목록 + 삭제
+            // [Asset Mommy 1.0.3] manage 섹션 — 기존 lb-xnai.lb.extra 항목 목록 + 삭제
             const buildManageHtml = (entries) => {
                 if (!entries.length) {
                     return `<div style="background:#1f2418;border:1px solid #3a4a2a;border-radius:8px;padding:10px 12px;color:#9bc28d;font-size:13px;">✓ 현재 캐릭터에 <b>lb-xnai.lb.extra</b> 항목이 없습니다. 아래에서 새로 추출하세요.</div>`;
