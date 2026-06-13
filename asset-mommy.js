@@ -1,10 +1,10 @@
 //@name AssetMommy
-//@display-name Asset Mommy 1.0.13
-//@version 1.0.13
+//@display-name Asset Mommy 1.0.14
+//@version 1.0.14
 //@api 3.0
 //@update-url https://raw.githubusercontent.com/aredsea/asset-mommy/main/asset-mommy.js
 //@description NovelAI 에셋 생성·관리 + 외견 추출기. iOS RisuAI 최적화.
-// Asset Mommy 1.0.13 — fork base: Asset maid 0.9.1 (NovelAIAutoAsset).
+// Asset Mommy 1.0.14 — fork base: Asset maid 0.9.1 (NovelAIAutoAsset).
 // Includes iOS RisuAI fixes: char enrichment via getCharacterFromIndex,
 // dedup lb-xnai.lb.extra, JSON parser robustness, cache invalidation.
 
@@ -34120,7 +34120,7 @@ body.naa-stream-image-guard-active .default-chat-screen .chat-message-container:
             }))
             .filter((lore) => {
                 if (!lore.content) return false;
-                // [Asset Mommy 1.0.13] 캐릭터 본인 로어북은 content만 있으면 모두 표시.
+                // [Asset Mommy 1.0.14] 캐릭터 본인 로어북은 content만 있으면 모두 표시.
                 if (sourceType === 'character') return true;
                 if (lore.score > 0) return true;
                 if (options.includeAlwaysActive && lore.alwaysActive) return true;
@@ -34131,7 +34131,7 @@ body.naa-stream-image-guard-active .default-chat-screen .chat-message-container:
     }
 
     function getCharacterLorebookCandidates(character) {
-        // [Asset Mommy 1.0.13] 캐릭터 자체 globalLore는 최대한 살림.
+        // [Asset Mommy 1.0.14] 캐릭터 자체 globalLore는 최대한 살림.
         // 원본은 score > 0 (캐릭터명 매칭) 항목만 통과 → 많은 항목이 잘림.
         // 캐릭터 본인 로어북은 alwaysActive·keys 보유 항목도 모두 포함.
         return normalizeLorebookCandidates(character?.globalLore, getCharacterAliases(character), {
@@ -34250,7 +34250,7 @@ body.naa-stream-image-guard-active .default-chat-screen .chat-message-container:
         ]);
     }
 
-    // [Asset Mommy 1.0.13] lbx 추출기와 동일한 필터 적용 — 소악마/시스템/프리셋 모듈 제외.
+    // [Asset Mommy 1.0.14] lbx 추출기와 동일한 필터 적용 — 소악마/시스템/프리셋 모듈 제외.
     // 본체 UI도 이 필터를 통과한 모듈만 보여줌.
     function ammIsSomakModule(mod) {
         if (!mod) return false;
@@ -34486,7 +34486,7 @@ body.naa-stream-image-guard-active .default-chat-screen .chat-message-container:
             }
         } catch (e) { console.log('[NAA-DB] dump err: ' + (e && e.message)); }
 
-        // [Asset Mommy 1.0.13] enrichment 강화. currentChar를 이름/id로 매칭해
+        // [Asset Mommy 1.0.14] enrichment 강화. currentChar를 이름/id로 매칭해
         // 다중 캐릭터 환경에서도 정확히 currentChar 데이터를 해당 캐릭터에 적용.
         // getCurrentCharacterIndex가 없는 빌드에서도 동작.
         let currentChar = null;
@@ -53041,7 +53041,7 @@ ${embeddedTagTesterBlobImageScript}
         }
     }
 
-    // [Asset Mommy 1.0.13] Spotify 디자인 시스템 전면 적용.
+    // [Asset Mommy 1.0.14] Spotify 디자인 시스템 전면 적용.
     // 토큰: getdesign add spotify (VoltAgent/awesome-design-md) 기반.
     // - 배경: #121212 base / #181818 elevated / #282828 higher / #1f1f1f input
     // - 브랜드: Spotify Green #1ed760 (functional accent only)
@@ -53049,7 +53049,7 @@ ${embeddedTagTesterBlobImageScript}
     // - 버튼: pill radius, UPPERCASE label, 1.4-2px letter-spacing, 700 weight
     // - 모션: 100-160ms ease, transform/opacity 위주
     // - 간격: 8px base unit
-    // [Asset Mommy 1.0.13] CSS variables를 <html> inline style로 강제 설정.
+    // [Asset Mommy 1.0.14] CSS variables를 <html> inline style로 강제 설정.
     // 원본 플러그인이 :root에 --naa-panel:#1b1117 같은 burgundy 변수 박아두고
     // 거의 모든 색을 var(--naa-*) 로 참조 → 변수만 덮으면 자동 전환.
     // inline style은 specificity 1,0,0,0 — 어떤 !important CSS도 이김.
@@ -53452,7 +53452,7 @@ ${embeddedTagTesterBlobImageScript}
             *, *::before, *::after { transition: none !important; animation: none !important; }
         }
 
-        /* ===== Asset Mommy 1.0.13 — Contract/burgundy theme killer =====
+        /* ===== Asset Mommy 1.0.14 — Contract/burgundy theme killer =====
            원본 플러그인이 가진 burgundy/wine + gold 테마 element들을
            높은 specificity로 모두 Spotify 디자인으로 강제 변경.
            셀렉터에 .naa-shell 또는 .naa-modal prefix를 추가해 인라인 스타일을 압도. */
@@ -54124,8 +54124,234 @@ ${embeddedTagTesterBlobImageScript}
                 width: 100% !important; max-width: 100% !important; min-width: 0 !important;
             }
             .naa-outfit-fields { grid-template-columns: minmax(0, 1fr) !important; gap: 10px !important; }
+
+            /* ===== [v1.0.14] 3개 영역 모바일 강제 fix ===== */
+            /* 셀렉터를 .naa-shell .naa-modal X 로 chain해서 specificity 0,3,0 — 인라인 !important 룰 이김 */
+
+            /* ① 프롬프트 탭 프로필 부분 (character row) — 모든 내부 grid 단일컬럼 + min-width 0 */
+            .naa-shell .naa-modal .naa-character-row,
+            .naa-shell .naa-modal .naa-character-row[data-naa-prompt-row] {
+                display: grid !important;
+                grid-template-columns: minmax(0, 1fr) !important;
+                width: 100% !important; max-width: 100% !important;
+                min-width: 0 !important;
+                padding: 14px !important; gap: 14px !important;
+            }
+            .naa-shell .naa-modal .naa-character-row > *,
+            .naa-shell .naa-modal .naa-character-row[data-naa-prompt-row] > * {
+                min-width: 0 !important; max-width: 100% !important; width: 100% !important;
+                box-sizing: border-box !important;
+            }
+            .naa-shell .naa-modal .naa-character-head,
+            .naa-shell .naa-modal .naa-character-row > .naa-character-head {
+                display: flex !important; flex-direction: column !important;
+                align-items: stretch !important; gap: 10px !important;
+                margin: 0 !important; padding: 0 !important;
+                min-height: 0 !important; height: auto !important;
+            }
+            .naa-shell .naa-modal .naa-character-title-wrap {
+                display: grid !important;
+                grid-template-columns: 32px minmax(0, 1fr) !important;
+                gap: 10px !important; width: 100% !important; min-width: 0 !important;
+                margin: 0 !important; min-height: 44px !important;
+                align-items: center !important;
+            }
+            .naa-shell .naa-modal .naa-character-title-wrap > strong {
+                min-width: 0 !important; max-width: 100% !important;
+                white-space: normal !important; overflow: visible !important;
+                text-overflow: clip !important;
+                word-break: keep-all !important; overflow-wrap: break-word !important;
+                line-height: 1.4 !important; font-size: 15px !important;
+                color: var(--amm-text, #fff) !important;
+            }
+            .naa-shell .naa-modal .naa-character-head-controls {
+                display: flex !important; flex-wrap: wrap !important; gap: 8px !important;
+                width: 100% !important; min-width: 0 !important;
+                align-self: stretch !important; transform: none !important;
+            }
+            .naa-shell .naa-modal .naa-character-head-controls > * {
+                flex: 1 1 auto !important; min-width: 0 !important;
+            }
+            /* 프롬프트 입력부 — 단일 컬럼 강제 */
+            .naa-shell .naa-modal .naa-main-prompt-with-reference,
+            .naa-shell .naa-modal .naa-main-prompt-content,
+            .naa-shell .naa-modal .naa-main-prompt-fields,
+            .naa-shell .naa-modal .naa-negative-custom-key-grid,
+            .naa-shell .naa-modal .naa-outfit-body,
+            .naa-shell .naa-modal .naa-outfit-fields {
+                display: grid !important;
+                grid-template-columns: minmax(0, 1fr) !important;
+                grid-template-rows: auto !important;
+                width: 100% !important; max-width: 100% !important;
+                min-width: 0 !important; height: auto !important;
+                gap: 10px !important;
+            }
+            .naa-shell .naa-modal .naa-main-prompt-field,
+            .naa-shell .naa-modal .naa-main-prompt-field-main,
+            .naa-shell .naa-modal .naa-outfit-fields > * {
+                grid-column: 1 / -1 !important; min-width: 0 !important;
+                width: 100% !important;
+            }
+
+            /* ② 모듈 선택 부분 — grid 단일컬럼 강제 + 카드 내부 정렬 */
+            .naa-shell .naa-modal .naa-module-grid,
+            .naa-shell .naa-modal .naa-module-card-grid,
+            .naa-shell .naa-modal .naa-lorebook-grid.naa-module-grid {
+                display: grid !important;
+                grid-template-columns: minmax(0, 1fr) !important;
+                gap: 10px !important;
+                padding: 8px 0 !important;
+            }
+            .naa-shell .naa-modal .naa-module-item,
+            .naa-shell .naa-modal [data-naa-module-card] {
+                width: 100% !important; max-width: 100% !important; min-width: 0 !important;
+                padding: 14px !important; border-radius: 10px !important;
+                background: var(--amm-bg-elevated, #181818) !important;
+                display: grid !important; gap: 10px !important;
+                box-sizing: border-box !important;
+            }
+            .naa-shell .naa-modal .naa-module-item-body {
+                display: grid !important; gap: 10px !important;
+                width: 100% !important; min-width: 0 !important;
+            }
+            .naa-shell .naa-modal .naa-module-pick {
+                display: grid !important;
+                grid-template-columns: 28px minmax(0, 1fr) !important;
+                gap: 10px !important; min-height: 44px !important;
+                align-items: center !important;
+                width: 100% !important; min-width: 0 !important;
+                cursor: pointer !important;
+            }
+            .naa-shell .naa-modal .naa-module-pick input[type="checkbox"] {
+                width: 22px !important; height: 22px !important;
+                accent-color: var(--amm-accent, #1ed760) !important;
+                justify-self: center !important;
+            }
+            .naa-shell .naa-modal .naa-module-select-dot {
+                display: none !important;
+            }
+            .naa-shell .naa-modal .naa-module-name {
+                font-size: 14px !important; font-weight: 700 !important;
+                line-height: 1.4 !important; min-width: 0 !important;
+                color: var(--amm-text, #fff) !important;
+                white-space: normal !important; overflow: visible !important;
+                text-overflow: clip !important;
+                word-break: keep-all !important; overflow-wrap: break-word !important;
+            }
+            .naa-shell .naa-modal .naa-module-stat-row,
+            .naa-shell .naa-modal .naa-module-meta-row {
+                display: flex !important; flex-wrap: wrap !important;
+                gap: 8px !important; align-items: center !important;
+                font-size: 12px !important; color: var(--amm-text-sub, #b3b3b3) !important;
+                width: 100% !important; min-width: 0 !important;
+            }
+            .naa-shell .naa-modal .naa-module-stat-row > *,
+            .naa-shell .naa-modal .naa-module-meta-row > * {
+                white-space: normal !important; min-width: 0 !important;
+            }
+            /* 모듈 selector summary (펼치기) */
+            .naa-shell .naa-modal .naa-module-selector > summary {
+                display: grid !important;
+                grid-template-columns: 24px minmax(0, 1fr) auto !important;
+                gap: 10px !important; padding: 14px !important;
+                min-height: 48px !important; align-items: center !important;
+                font-size: 14px !important; cursor: pointer !important;
+                list-style: none !important;
+            }
+            .naa-shell .naa-modal .naa-module-selector > summary > strong {
+                white-space: normal !important; word-break: keep-all !important;
+                font-size: 14px !important; font-weight: 700 !important;
+                min-width: 0 !important;
+            }
+
+            /* ③ 로어북 체크 부분 — 단일컬럼, 한글 keep-all */
+            .naa-shell .naa-modal .naa-lorebook-grid,
+            .naa-shell .naa-modal .naa-lorebook-grid-images,
+            .naa-shell .naa-modal .naa-lorebook-grid-compact {
+                display: grid !important;
+                grid-template-columns: minmax(0, 1fr) !important;
+                gap: 10px !important;
+            }
+            .naa-shell .naa-modal .naa-lorebook-card,
+            .naa-shell .naa-modal .naa-lorebook-card-image,
+            .naa-shell .naa-modal .naa-lorebook-card-compact {
+                display: grid !important;
+                grid-template-columns: 32px minmax(0, 1fr) !important;
+                gap: 12px !important;
+                width: 100% !important; max-width: 100% !important; min-width: 0 !important;
+                padding: 14px !important; border-radius: 10px !important;
+                background: var(--amm-bg-elevated, #181818) !important;
+                align-items: start !important;
+                box-sizing: border-box !important;
+            }
+            .naa-shell .naa-modal .naa-lorebook-card-image {
+                grid-template-columns: 32px 72px minmax(0, 1fr) !important;
+            }
+            .naa-shell .naa-modal .naa-lorebook-card > input[type="checkbox"],
+            .naa-shell .naa-modal .naa-lorebook-card-pick > input[type="checkbox"] {
+                width: 24px !important; height: 24px !important;
+                margin-top: 4px !important;
+                accent-color: var(--amm-accent, #1ed760) !important;
+            }
+            .naa-shell .naa-modal .naa-lorebook-card-pick {
+                display: contents !important;
+            }
+            .naa-shell .naa-modal .naa-lorebook-image,
+            .naa-shell .naa-modal .naa-lorebook-card-image .naa-lorebook-image {
+                width: 72px !important; height: 96px !important;
+                border-radius: 6px !important;
+                background: var(--amm-bg-input, #1f1f1f) !important;
+                overflow: hidden !important;
+            }
+            .naa-shell .naa-modal .naa-lorebook-image > img {
+                width: 100% !important; height: 100% !important;
+                object-fit: cover !important;
+            }
+            .naa-shell .naa-modal .naa-lorebook-card-body {
+                display: grid !important; gap: 6px !important;
+                min-width: 0 !important; max-width: 100% !important;
+                align-content: start !important;
+            }
+            .naa-shell .naa-modal .naa-lorebook-card-title-row {
+                display: grid !important;
+                grid-template-columns: minmax(0, 1fr) 32px !important;
+                gap: 8px !important; align-items: start !important;
+                min-width: 0 !important;
+            }
+            .naa-shell .naa-modal .naa-lorebook-card-title-row > strong {
+                min-width: 0 !important; max-width: 100% !important;
+                font-size: 14px !important; font-weight: 700 !important;
+                line-height: 1.45 !important;
+                letter-spacing: 0 !important;
+                color: var(--amm-text, #fff) !important;
+                white-space: normal !important;
+                overflow: visible !important;
+                text-overflow: clip !important;
+                word-break: keep-all !important;
+                overflow-wrap: break-word !important;
+                hyphens: none !important;
+                display: block !important;
+            }
+            .naa-shell .naa-modal .naa-lorebook-card-title-row > .naa-lorebook-detail-icon {
+                width: 32px !important; height: 32px !important; min-width: 32px !important;
+                padding: 0 !important; flex: 0 0 32px !important;
+                font-size: 12px !important;
+            }
+            .naa-shell .naa-modal .naa-lorebook-section-title {
+                font-size: 11px !important; font-weight: 700 !important;
+                letter-spacing: 0.08em !important; text-transform: uppercase !important;
+                color: var(--amm-text-sub, #b3b3b3) !important;
+                padding: 8px 0 4px !important;
+            }
+            /* 선택된 카드 상태 표시 */
+            .naa-shell .naa-modal .naa-lorebook-card.selected,
+            .naa-shell .naa-modal .naa-lorebook-card-image.selected,
+            .naa-shell .naa-modal .naa-lorebook-card-compact.selected {
+                box-shadow: 0 0 0 2px var(--amm-accent, #1ed760) inset !important;
+                background: var(--amm-bg-higher, #282828) !important;
+            }
         `;
-        // [Asset Mommy 1.0.13] V3 플러그인은 iframe에서 실행되고 UI는 부모 doc에 렌더됨.
+        // [Asset Mommy 1.0.14] V3 플러그인은 iframe에서 실행되고 UI는 부모 doc에 렌더됨.
         // [v1.0.12] 단순화 — 모바일 규칙도 @media 없이 평탄하게 들어있으므로
         // 별도 extraStyle 필요 없음. 단일 style 하나로 끝.
         const placeAtEnd = () => {
@@ -54695,7 +54921,7 @@ ${embeddedTagTesterBlobImageScript}
                     methods.push('setCharacterToIndex(' + idx + ')');
                 } catch (e) { console.log('[LBX-SAVE] setCharacterToIndex err: ' + (e && e.message)); }
             }
-            // [Asset Mommy 1.0.13] ★보안 critical★ — setDatabase 전체 덮어쓰기 패턴 제거.
+            // [Asset Mommy 1.0.14] ★보안 critical★ — setDatabase 전체 덮어쓰기 패턴 제거.
             // RisuAI 보안 업데이트 후 getDatabase()가 plugins 필드를 제외한 stub을 반환하므로,
             // setDatabase(db)로 통째 덮어쓰면 plugins가 undefined가 되어 모든 플러그인이 삭제됨
             // (자기 자신 포함). setCharacter/setCharacterToIndex는 RisuAI 내부에서 안전한
@@ -54731,7 +54957,7 @@ ${embeddedTagTesterBlobImageScript}
             if (existing) existing.remove();
         }
 
-        // [Asset Mommy 1.0.13] 모바일 친화 모달 — 좁은 화면에서 거의 풀스크린.
+        // [Asset Mommy 1.0.14] 모바일 친화 모달 — 좁은 화면에서 거의 풀스크린.
         // 터치 타겟 44px+, 큰 폰트, single column, safe-area-inset 대응.
         function lbxModalShell(innerHtml) {
             lbxRemoveModal();
@@ -54775,7 +55001,7 @@ ${embeddedTagTesterBlobImageScript}
             if (b) b.innerHTML = html;
         }
 
-        // [Asset Mommy 1.0.13] 모든 lb-xnai.lb.extra 인덱스 (중복 정리용)
+        // [Asset Mommy 1.0.14] 모든 lb-xnai.lb.extra 인덱스 (중복 정리용)
         function lbxFindAllExtraIndices(char) {
             const lore = Array.isArray(char && char.globalLore) ? char.globalLore : [];
             const out = [];
@@ -54785,7 +55011,7 @@ ${embeddedTagTesterBlobImageScript}
             return out;
         }
 
-        // [Asset Mommy 1.0.13] 개별 extra 항목 삭제. 같은 dedup 패턴 — 인덱스 무관하게
+        // [Asset Mommy 1.0.14] 개별 extra 항목 삭제. 같은 dedup 패턴 — 인덱스 무관하게
         // 지정 content와 일치하는 항목만 제거 후 setCharacter 전체 save.
         async function lbxDeleteExtraAtIndex(targetIdx) {
             const { char, idx } = await lbxGetActiveCharacterWithIndex();
@@ -54810,7 +55036,7 @@ ${embeddedTagTesterBlobImageScript}
             return fresh;
         }
 
-        // [Asset Mommy 1.0.13] 한방 정리 — 모든 extra 제거
+        // [Asset Mommy 1.0.14] 한방 정리 — 모든 extra 제거
         async function lbxDeleteAllExtras() {
             const { char, idx } = await lbxGetActiveCharacterWithIndex();
             let fresh = null;
@@ -54860,7 +55086,7 @@ ${embeddedTagTesterBlobImageScript}
                 ? '<div style="color:#ffc757;font-size:12px;">⚠ 활성화된 모듈이 감지되지 않았습니다. 등장인물 정보가 모듈에 있다면, 추출 전에 해당 모듈을 채팅/글로벌에 활성화하세요.</div>'
                 : '';
 
-            // [Asset Mommy 1.0.13] manage 섹션 — 기존 lb-xnai.lb.extra 항목 목록 + 삭제
+            // [Asset Mommy 1.0.14] manage 섹션 — 기존 lb-xnai.lb.extra 항목 목록 + 삭제
             const buildManageHtml = (entries) => {
                 if (!entries.length) {
                     return `<div style="background:#1f2418;border:1px solid #3a4a2a;border-radius:8px;padding:10px 12px;color:#9bc28d;font-size:13px;">✓ 현재 캐릭터에 <b>lb-xnai.lb.extra</b> 항목이 없습니다. 아래에서 새로 추출하세요.</div>`;
