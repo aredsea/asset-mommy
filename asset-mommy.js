@@ -1,10 +1,10 @@
 //@name AssetMommy
-//@display-name Asset Mommy 1.0.3
-//@version 1.0.3
+//@display-name Asset Mommy 1.0.4
+//@version 1.0.4
 //@api 3.0
 //@update-url https://raw.githubusercontent.com/aredsea/asset-mommy/main/asset-mommy.js
 //@description NovelAI 에셋 생성·관리 + 외견 추출기. iOS RisuAI 최적화.
-// Asset Mommy 1.0.3 — fork base: Asset maid 0.9.1 (NovelAIAutoAsset).
+// Asset Mommy 1.0.4 — fork base: Asset maid 0.9.1 (NovelAIAutoAsset).
 // Includes iOS RisuAI fixes: char enrichment via getCharacterFromIndex,
 // dedup lb-xnai.lb.extra, JSON parser robustness, cache invalidation.
 
@@ -34456,7 +34456,7 @@ body.naa-stream-image-guard-active .default-chat-screen .chat-message-container:
             }
         } catch (e) { console.log('[NAA-DB] dump err: ' + (e && e.message)); }
 
-        // [Asset Mommy 1.0.3] 다중 경로 enrichment.
+        // [Asset Mommy 1.0.4] 다중 경로 enrichment.
         // getCharacterFromIndex(i) + getCharacter()(현재 선택 캐릭터, 에셋 저장 경로와 동일).
         // 둘 중 하나라도 풀 데이터를 반환하면 그걸 사용.
         let currentChar = null;
@@ -52995,14 +52995,323 @@ ${embeddedTagTesterBlobImageScript}
         }
     }
 
-    // [Asset Mommy 1.0.3] 모바일 우선 글로벌 CSS 주입.
-    // 기존 데스크톱 위주의 inline CSS를 480px 이하 화면에서 압도적으로 덮음.
-    // initialize() 진입 즉시 head에 1회 inject — 이후 모든 UI 렌더에 자동 적용.
+    // [Asset Mommy 1.0.4] Spotify 디자인 시스템 전면 적용.
+    // 토큰: getdesign add spotify (VoltAgent/awesome-design-md) 기반.
+    // - 배경: #121212 base / #181818 elevated / #282828 higher / #1f1f1f input
+    // - 브랜드: Spotify Green #1ed760 (functional accent only)
+    // - 텍스트: #fff primary / #b3b3b3 secondary / #6a6a6a tertiary
+    // - 버튼: pill radius, UPPERCASE label, 1.4-2px letter-spacing, 700 weight
+    // - 모션: 100-160ms ease, transform/opacity 위주
+    // - 간격: 8px base unit
     function injectMobileFirstOverrides() {
         if (!globalThis.document || document.getElementById('amm-mobile-overrides')) return;
         const style = document.createElement('style');
         style.id = 'amm-mobile-overrides';
         style.textContent = `
+        /* ===== Asset Mommy — Spotify-inspired design tokens ===== */
+        :root {
+            --amm-bg-base: #121212;
+            --amm-bg-elevated: #181818;
+            --amm-bg-higher: #282828;
+            --amm-bg-input: #1f1f1f;
+            --amm-bg-hover: rgba(255,255,255,.04);
+            --amm-bg-active: rgba(255,255,255,.08);
+            --amm-accent: #1ed760;
+            --amm-accent-hover: #1fdf64;
+            --amm-accent-press: #169c46;
+            --amm-text: #ffffff;
+            --amm-text-sub: #b3b3b3;
+            --amm-text-tert: #6a6a6a;
+            --amm-text-on-accent: #000000;
+            --amm-border: #292929;
+            --amm-border-strong: #3e3e3e;
+            --amm-danger: #f3727f;
+            --amm-warn: #ffa42b;
+            --amm-info: #539df5;
+            --amm-shadow-sm: 0 4px 12px rgba(0,0,0,.32);
+            --amm-shadow-md: 0 8px 24px rgba(0,0,0,.4);
+            --amm-shadow-lg: 0 24px 60px rgba(0,0,0,.5);
+            --amm-radius-card: 8px;
+            --amm-radius-input: 4px;
+            --amm-radius-pill: 9999px;
+            --amm-motion-fast: 100ms cubic-bezier(.3,0,.4,1);
+            --amm-motion-base: 160ms cubic-bezier(.3,0,.4,1);
+        }
+
+        /* ===== Global token override for naa-* CSS variables ===== */
+        :root, .naa-shell, .naa-modal {
+            --naa-bg: var(--amm-bg-base) !important;
+            --naa-panel: var(--amm-bg-elevated) !important;
+            --naa-panel2: var(--amm-bg-higher) !important;
+            --naa-field: var(--amm-bg-input) !important;
+            --naa-line: var(--amm-border) !important;
+            --naa-line2: var(--amm-border-strong) !important;
+            --naa-text: var(--amm-text) !important;
+            --naa-muted: var(--amm-text-sub) !important;
+            --naa-accent: var(--amm-accent) !important;
+            --naa-accent-bg: rgba(30,215,96,.12) !important;
+            --naa-primary: var(--amm-accent) !important;
+            --naa-danger: var(--amm-danger) !important;
+            --naa-warn: var(--amm-warn) !important;
+            --naa-ok: var(--amm-accent) !important;
+            --naa-radius: var(--amm-radius-card) !important;
+        }
+
+        /* ===== Foundation ===== */
+        html, body { background: var(--amm-bg-base) !important; }
+        body { font-family: 'SF Pro Text', 'Helvetica Neue', 'Spotify Mix UI', 'CircularSp', -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif !important; color: var(--amm-text) !important; -webkit-font-smoothing: antialiased; }
+
+        /* ===== Modal shell ===== */
+        .naa-shell {
+            padding: 0 !important;
+            background: var(--amm-bg-base) !important;
+            background-image: none !important;
+            min-height: 100vh !important;
+        }
+        .naa-modal {
+            background: var(--amm-bg-base) !important;
+            border: 0 !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            width: 100% !important; max-width: 100% !important;
+            height: 100vh !important; height: 100dvh !important; max-height: 100dvh !important;
+            grid-template-rows: auto auto minmax(0, 1fr) !important;
+        }
+
+        /* ===== Header ===== */
+        .naa-head {
+            background: var(--amm-bg-base) !important;
+            background-image: linear-gradient(180deg, rgba(30,215,96,.06) 0%, transparent 60%) !important;
+            border-bottom: 1px solid var(--amm-border) !important;
+            padding: 14px 16px !important;
+            min-height: auto !important;
+        }
+        .naa-head::after { display: none !important; }
+        .naa-head h1 {
+            font-family: 'CircularSp', 'SF Pro Display', 'Spotify Mix UI', -apple-system, system-ui, sans-serif !important;
+            font-weight: 800 !important; font-size: 18px !important;
+            color: var(--amm-text) !important; letter-spacing: -0.01em !important;
+        }
+        .naa-title-row { gap: 10px !important; }
+        .naa-actions { gap: 8px !important; }
+
+        /* ===== Tabs (Spotify navigation pills) ===== */
+        .naa-tabs {
+            background: var(--amm-bg-base) !important;
+            border-bottom: 1px solid var(--amm-border) !important;
+            padding: 8px 12px !important;
+            gap: 4px !important;
+            overflow-x: auto !important;
+            -webkit-overflow-scrolling: touch !important;
+        }
+        .naa-tab {
+            background: transparent !important;
+            border: 0 !important; border-radius: var(--amm-radius-pill) !important;
+            color: var(--amm-text-sub) !important;
+            padding: 10px 16px !important; min-height: 40px !important;
+            font-weight: 700 !important; font-size: 13px !important;
+            letter-spacing: 0.04em !important; text-transform: none !important;
+            transition: background var(--amm-motion-fast), color var(--amm-motion-fast) !important;
+            white-space: nowrap !important;
+        }
+        .naa-tab:hover { background: var(--amm-bg-hover) !important; color: var(--amm-text) !important; box-shadow: none !important; }
+        .naa-tab.active {
+            background: var(--amm-text) !important; color: #000 !important;
+            border: 0 !important; box-shadow: none !important;
+        }
+        .naa-tab.active::after { display: none !important; }
+
+        /* ===== Body ===== */
+        .naa-body {
+            background: var(--amm-bg-base) !important;
+            background-image: none !important;
+            padding: 16px !important; gap: 16px !important;
+        }
+        .naa-tab-panel { gap: 16px !important; }
+
+        /* ===== Cards & Sections ===== */
+        .naa-section,
+        .naa-character-row,
+        .naa-asset-metadata-row,
+        .naa-source-card,
+        .naa-lorebook-card,
+        .naa-artist-row,
+        .naa-asset-picker-card,
+        .naa-lorebook-item {
+            background: var(--amm-bg-elevated) !important;
+            background-image: none !important;
+            border: 0 !important;
+            border-radius: var(--amm-radius-card) !important;
+            box-shadow: none !important;
+            transition: background var(--amm-motion-base) !important;
+        }
+        .naa-section { padding: 16px !important; gap: 14px !important; }
+        .naa-section:hover, .naa-character-row:hover, .naa-lorebook-card:hover, .naa-lorebook-item:hover, .naa-asset-picker-card:hover {
+            background: #1f1f1f !important;
+        }
+        .naa-source-card:hover, .naa-character-source-section .naa-character-source-card:hover { background: var(--amm-bg-higher) !important; }
+        .naa-source-card.active, .naa-asset-picker-card.selected {
+            background: var(--amm-bg-higher) !important;
+            border: 0 !important; box-shadow: 0 0 0 2px var(--amm-accent) inset !important;
+        }
+        .naa-section h2,
+        .naa-section-title-row strong,
+        .naa-outfit-editor-head strong,
+        .naa-character-head strong {
+            color: var(--amm-text) !important;
+            font-weight: 700 !important; font-size: 16px !important;
+            letter-spacing: -0.01em !important;
+        }
+        .naa-help, .naa-mini, .naa-field span, .naa-check span {
+            color: var(--amm-text-sub) !important; font-weight: 500 !important;
+        }
+
+        /* ===== Buttons ===== */
+        .naa-btn, .naa-icon-btn {
+            background: transparent !important;
+            background-image: none !important;
+            border: 1px solid var(--amm-border-strong) !important;
+            color: var(--amm-text) !important;
+            border-radius: var(--amm-radius-pill) !important;
+            padding: 10px 18px !important; min-height: 40px !important;
+            font-weight: 700 !important; font-size: 13px !important;
+            letter-spacing: 0.08em !important; text-transform: uppercase !important;
+            transition: transform var(--amm-motion-fast), background var(--amm-motion-fast), border-color var(--amm-motion-fast) !important;
+            cursor: pointer !important;
+        }
+        .naa-btn:hover, .naa-icon-btn:hover {
+            background: var(--amm-bg-hover) !important;
+            border-color: var(--amm-text) !important; color: var(--amm-text) !important;
+            transform: scale(1.04) !important;
+        }
+        .naa-btn:active, .naa-icon-btn:active { transform: scale(0.98) !important; }
+        .naa-btn.primary {
+            background: var(--amm-accent) !important; background-image: none !important;
+            border: 0 !important; color: var(--amm-text-on-accent) !important;
+            box-shadow: none !important;
+        }
+        .naa-btn.primary:hover { background: var(--amm-accent-hover) !important; transform: scale(1.04) !important; }
+        .naa-btn.primary:active { background: var(--amm-accent-press) !important; }
+        .naa-btn:focus-visible, .naa-tab:focus-visible {
+            outline: 2px solid var(--amm-text) !important; outline-offset: 2px !important;
+        }
+        .naa-info-icon, .naa-icon-btn--icon {
+            min-width: 32px !important; min-height: 32px !important;
+            padding: 0 !important; border-radius: 50% !important;
+            background: var(--amm-bg-higher) !important; border: 0 !important;
+            color: var(--amm-text-sub) !important;
+            font-size: 12px !important; letter-spacing: 0 !important; text-transform: none !important;
+        }
+        .naa-info-icon:hover { background: var(--amm-border-strong) !important; color: var(--amm-text) !important; }
+
+        /* ===== Form fields ===== */
+        .naa-field input,
+        .naa-field select,
+        .naa-field textarea,
+        .naa-stepper input,
+        input[type="text"], input[type="number"], input[type="url"], input[type="email"], textarea, select {
+            background: var(--amm-bg-input) !important;
+            border: 1px solid var(--amm-border) !important;
+            border-radius: var(--amm-radius-input) !important;
+            color: var(--amm-text) !important;
+            padding: 10px 12px !important; min-height: 44px !important;
+            font-size: 14px !important; font-weight: 500 !important;
+            transition: border-color var(--amm-motion-base) !important;
+        }
+        .naa-field input:focus,
+        .naa-field select:focus,
+        .naa-field textarea:focus {
+            border-color: var(--amm-text) !important;
+            box-shadow: none !important; outline: 0 !important;
+        }
+        .naa-field input::placeholder, .naa-field textarea::placeholder { color: var(--amm-text-tert) !important; }
+        textarea { min-height: 96px !important; line-height: 1.5 !important; }
+
+        /* ===== Checkboxes & Radios ===== */
+        .naa-checkbox-box, .naa-choice {
+            background: var(--amm-bg-input) !important; border-color: var(--amm-border) !important;
+            border-radius: var(--amm-radius-input) !important;
+        }
+        .naa-check input, .naa-choice input, .naa-lorebook-check input,
+        .naa-checkbox-box input, .naa-asset-filter-toggle input, .naa-asset-picker-check input {
+            accent-color: var(--amm-accent) !important; width: 18px !important; height: 18px !important;
+        }
+        .naa-check span { font-weight: 600 !important; color: var(--amm-text) !important; }
+
+        /* ===== Subtabs / segment pills ===== */
+        .naa-subtab, .naa-source-filter-btn, .naa-asset-filter-tab, .naa-asset-filter-toggle,
+        .naa-source-filter-action-btn,
+        .naa-character-source-section .naa-character-subtab {
+            background: var(--amm-bg-elevated) !important;
+            border: 0 !important; border-radius: var(--amm-radius-pill) !important;
+            color: var(--amm-text-sub) !important;
+            min-height: 36px !important; padding: 8px 14px !important;
+            font-weight: 700 !important; font-size: 12px !important;
+            letter-spacing: 0.04em !important; text-transform: none !important;
+        }
+        .naa-subtab:hover, .naa-character-source-section .naa-character-subtab:hover {
+            background: var(--amm-bg-higher) !important; color: var(--amm-text) !important;
+        }
+        .naa-subtab.active, .naa-source-filter-btn.active, .naa-asset-filter-tab.active,
+        .naa-character-source-section .naa-character-subtab.active {
+            background: var(--amm-text) !important; color: #000 !important;
+            box-shadow: none !important;
+        }
+
+        /* ===== Source filter, lorebook, asset cards ===== */
+        .naa-source-filter,
+        .naa-subtabs,
+        .naa-asset-filter-tabs {
+            background: transparent !important; border: 0 !important; box-shadow: none !important;
+            border-radius: var(--amm-radius-pill) !important; overflow: visible !important;
+        }
+        .naa-source-filter-label {
+            background: var(--amm-bg-elevated) !important; border: 0 !important;
+            color: var(--amm-text-sub) !important; font-weight: 600 !important;
+            border-radius: var(--amm-radius-pill) 0 0 var(--amm-radius-pill) !important;
+        }
+        .naa-source-card-thumb,
+        .naa-lorebook-image,
+        .naa-selected-asset-thumb,
+        .naa-outfit-source-preview,
+        .naa-outfit-source-empty,
+        .naa-asset-picker-thumb {
+            border-radius: var(--amm-radius-card) !important;
+            background: var(--amm-bg-input) !important; border: 0 !important;
+        }
+
+        /* ===== Status pills & tags ===== */
+        .naa-source-meta-tag,
+        .naa-asset-meta-overlay,
+        .naa-task-notice {
+            background: var(--amm-bg-higher) !important;
+            color: var(--amm-text) !important;
+            border: 0 !important; border-radius: var(--amm-radius-pill) !important;
+            padding: 4px 10px !important; font-size: 11px !important;
+            font-weight: 700 !important; letter-spacing: 0.04em !important;
+        }
+        .naa-task-notice[data-tone="loading"] { background: rgba(83,157,245,.16) !important; color: var(--amm-info) !important; }
+        .naa-task-notice[data-tone="success"] { background: rgba(30,215,96,.16) !important; color: var(--amm-accent) !important; }
+        .naa-task-notice[data-tone="error"] { background: rgba(243,114,127,.16) !important; color: var(--amm-danger) !important; }
+
+        /* ===== Save status dot ===== */
+        .naa-save-status { color: var(--amm-warn) !important; }
+
+        /* ===== Asset picker modal ===== */
+        .naa-asset-picker-backdrop { background: rgba(0,0,0,.7) !important; backdrop-filter: blur(8px) !important; }
+        .naa-asset-picker-modal {
+            background: var(--amm-bg-base) !important; border: 0 !important;
+            box-shadow: var(--amm-shadow-lg) !important;
+            border-radius: var(--amm-radius-card) !important;
+        }
+        .naa-asset-picker-head { background: var(--amm-bg-base) !important; border-bottom: 1px solid var(--amm-border) !important; }
+
+        /* ===== Animation reduce-motion friendly ===== */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { transition: none !important; animation: none !important; }
+        }
+
+        /* ===== Mobile (≤480px) refinements ===== */
         /* ===== Asset Mommy mobile-first overrides (480px and below) ===== */
         @media (max-width: 480px) {
             /* 모달 — 풀스크린 활용 */
@@ -53745,7 +54054,7 @@ ${embeddedTagTesterBlobImageScript}
                     methods.push('setCharacterToIndex(' + idx + ')');
                 } catch (e) { console.log('[LBX-SAVE] setCharacterToIndex err: ' + (e && e.message)); }
             }
-            // [Asset Mommy 1.0.3] ★보안 critical★ — setDatabase 전체 덮어쓰기 패턴 제거.
+            // [Asset Mommy 1.0.4] ★보안 critical★ — setDatabase 전체 덮어쓰기 패턴 제거.
             // RisuAI 보안 업데이트 후 getDatabase()가 plugins 필드를 제외한 stub을 반환하므로,
             // setDatabase(db)로 통째 덮어쓰면 plugins가 undefined가 되어 모든 플러그인이 삭제됨
             // (자기 자신 포함). setCharacter/setCharacterToIndex는 RisuAI 내부에서 안전한
@@ -53781,7 +54090,7 @@ ${embeddedTagTesterBlobImageScript}
             if (existing) existing.remove();
         }
 
-        // [Asset Mommy 1.0.3] 모바일 친화 모달 — 좁은 화면에서 거의 풀스크린.
+        // [Asset Mommy 1.0.4] 모바일 친화 모달 — 좁은 화면에서 거의 풀스크린.
         // 터치 타겟 44px+, 큰 폰트, single column, safe-area-inset 대응.
         function lbxModalShell(innerHtml) {
             lbxRemoveModal();
@@ -53825,7 +54134,7 @@ ${embeddedTagTesterBlobImageScript}
             if (b) b.innerHTML = html;
         }
 
-        // [Asset Mommy 1.0.3] 모든 lb-xnai.lb.extra 인덱스 (중복 정리용)
+        // [Asset Mommy 1.0.4] 모든 lb-xnai.lb.extra 인덱스 (중복 정리용)
         function lbxFindAllExtraIndices(char) {
             const lore = Array.isArray(char && char.globalLore) ? char.globalLore : [];
             const out = [];
@@ -53835,7 +54144,7 @@ ${embeddedTagTesterBlobImageScript}
             return out;
         }
 
-        // [Asset Mommy 1.0.3] 개별 extra 항목 삭제. 같은 dedup 패턴 — 인덱스 무관하게
+        // [Asset Mommy 1.0.4] 개별 extra 항목 삭제. 같은 dedup 패턴 — 인덱스 무관하게
         // 지정 content와 일치하는 항목만 제거 후 setCharacter 전체 save.
         async function lbxDeleteExtraAtIndex(targetIdx) {
             const { char, idx } = await lbxGetActiveCharacterWithIndex();
@@ -53860,7 +54169,7 @@ ${embeddedTagTesterBlobImageScript}
             return fresh;
         }
 
-        // [Asset Mommy 1.0.3] 한방 정리 — 모든 extra 제거
+        // [Asset Mommy 1.0.4] 한방 정리 — 모든 extra 제거
         async function lbxDeleteAllExtras() {
             const { char, idx } = await lbxGetActiveCharacterWithIndex();
             let fresh = null;
@@ -53910,7 +54219,7 @@ ${embeddedTagTesterBlobImageScript}
                 ? '<div style="color:#ffc757;font-size:12px;">⚠ 활성화된 모듈이 감지되지 않았습니다. 등장인물 정보가 모듈에 있다면, 추출 전에 해당 모듈을 채팅/글로벌에 활성화하세요.</div>'
                 : '';
 
-            // [Asset Mommy 1.0.3] manage 섹션 — 기존 lb-xnai.lb.extra 항목 목록 + 삭제
+            // [Asset Mommy 1.0.4] manage 섹션 — 기존 lb-xnai.lb.extra 항목 목록 + 삭제
             const buildManageHtml = (entries) => {
                 if (!entries.length) {
                     return `<div style="background:#1f2418;border:1px solid #3a4a2a;border-radius:8px;padding:10px 12px;color:#9bc28d;font-size:13px;">✓ 현재 캐릭터에 <b>lb-xnai.lb.extra</b> 항목이 없습니다. 아래에서 새로 추출하세요.</div>`;
