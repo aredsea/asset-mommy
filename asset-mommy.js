@@ -1,10 +1,10 @@
 //@name AssetMommy
-//@display-name Asset Mommy 1.0.10
-//@version 1.0.10
+//@display-name Asset Mommy 1.0.11
+//@version 1.0.11
 //@api 3.0
 //@update-url https://raw.githubusercontent.com/aredsea/asset-mommy/main/asset-mommy.js
 //@description NovelAI 에셋 생성·관리 + 외견 추출기. iOS RisuAI 최적화.
-// Asset Mommy 1.0.10 — fork base: Asset maid 0.9.1 (NovelAIAutoAsset).
+// Asset Mommy 1.0.11 — fork base: Asset maid 0.9.1 (NovelAIAutoAsset).
 // Includes iOS RisuAI fixes: char enrichment via getCharacterFromIndex,
 // dedup lb-xnai.lb.extra, JSON parser robustness, cache invalidation.
 
@@ -34120,7 +34120,7 @@ body.naa-stream-image-guard-active .default-chat-screen .chat-message-container:
             }))
             .filter((lore) => {
                 if (!lore.content) return false;
-                // [Asset Mommy 1.0.10] 캐릭터 본인 로어북은 content만 있으면 모두 표시.
+                // [Asset Mommy 1.0.11] 캐릭터 본인 로어북은 content만 있으면 모두 표시.
                 if (sourceType === 'character') return true;
                 if (lore.score > 0) return true;
                 if (options.includeAlwaysActive && lore.alwaysActive) return true;
@@ -34131,7 +34131,7 @@ body.naa-stream-image-guard-active .default-chat-screen .chat-message-container:
     }
 
     function getCharacterLorebookCandidates(character) {
-        // [Asset Mommy 1.0.10] 캐릭터 자체 globalLore는 최대한 살림.
+        // [Asset Mommy 1.0.11] 캐릭터 자체 globalLore는 최대한 살림.
         // 원본은 score > 0 (캐릭터명 매칭) 항목만 통과 → 많은 항목이 잘림.
         // 캐릭터 본인 로어북은 alwaysActive·keys 보유 항목도 모두 포함.
         return normalizeLorebookCandidates(character?.globalLore, getCharacterAliases(character), {
@@ -34250,7 +34250,7 @@ body.naa-stream-image-guard-active .default-chat-screen .chat-message-container:
         ]);
     }
 
-    // [Asset Mommy 1.0.10] lbx 추출기와 동일한 필터 적용 — 소악마/시스템/프리셋 모듈 제외.
+    // [Asset Mommy 1.0.11] lbx 추출기와 동일한 필터 적용 — 소악마/시스템/프리셋 모듈 제외.
     // 본체 UI도 이 필터를 통과한 모듈만 보여줌.
     function ammIsSomakModule(mod) {
         if (!mod) return false;
@@ -34486,7 +34486,7 @@ body.naa-stream-image-guard-active .default-chat-screen .chat-message-container:
             }
         } catch (e) { console.log('[NAA-DB] dump err: ' + (e && e.message)); }
 
-        // [Asset Mommy 1.0.10] enrichment 강화. currentChar를 이름/id로 매칭해
+        // [Asset Mommy 1.0.11] enrichment 강화. currentChar를 이름/id로 매칭해
         // 다중 캐릭터 환경에서도 정확히 currentChar 데이터를 해당 캐릭터에 적용.
         // getCurrentCharacterIndex가 없는 빌드에서도 동작.
         let currentChar = null;
@@ -53041,7 +53041,7 @@ ${embeddedTagTesterBlobImageScript}
         }
     }
 
-    // [Asset Mommy 1.0.10] Spotify 디자인 시스템 전면 적용.
+    // [Asset Mommy 1.0.11] Spotify 디자인 시스템 전면 적용.
     // 토큰: getdesign add spotify (VoltAgent/awesome-design-md) 기반.
     // - 배경: #121212 base / #181818 elevated / #282828 higher / #1f1f1f input
     // - 브랜드: Spotify Green #1ed760 (functional accent only)
@@ -53054,6 +53054,35 @@ ${embeddedTagTesterBlobImageScript}
         const style = document.createElement('style');
         style.id = 'amm-mobile-overrides';
         style.textContent = `
+        /* ===== [v1.0.11] 육안 진단 마커 — 이게 보여야 CSS가 도달한 것 ===== */
+        /* 1) 화면 외곽 형광 녹색 보더 */
+        html, body {
+            outline: 4px solid #1ed760 !important;
+            outline-offset: -4px !important;
+        }
+        /* 2) 본체 배경 강제 검정 */
+        html, body, .naa-shell, .naa-modal, .naa-body {
+            background-color: #121212 !important;
+            background-image: none !important;
+        }
+        /* 3) 우상단 형광 버전 pill */
+        body::before {
+            content: "AMM v1.0.11 CSS LIVE" !important;
+            position: fixed !important;
+            top: max(8px, env(safe-area-inset-top, 8px)) !important;
+            right: 8px !important;
+            z-index: 2147483647 !important;
+            padding: 6px 10px !important;
+            background: #1ed760 !important;
+            color: #000 !important;
+            font-family: -apple-system, system-ui, sans-serif !important;
+            font-size: 11px !important;
+            font-weight: 900 !important;
+            letter-spacing: 0.05em !important;
+            border-radius: 999px !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,.5), 0 0 20px rgba(30,215,96,.4) !important;
+            pointer-events: none !important;
+        }
         /* ===== Asset Mommy — Spotify-inspired design tokens ===== */
         :root {
             --amm-bg-base: #121212;
@@ -53366,7 +53395,7 @@ ${embeddedTagTesterBlobImageScript}
             *, *::before, *::after { transition: none !important; animation: none !important; }
         }
 
-        /* ===== Asset Mommy 1.0.10 — Contract/burgundy theme killer =====
+        /* ===== Asset Mommy 1.0.11 — Contract/burgundy theme killer =====
            원본 플러그인이 가진 burgundy/wine + gold 테마 element들을
            높은 specificity로 모두 Spotify 디자인으로 강제 변경.
            셀렉터에 .naa-shell 또는 .naa-modal prefix를 추가해 인라인 스타일을 압도. */
@@ -54040,7 +54069,7 @@ ${embeddedTagTesterBlobImageScript}
             .naa-outfit-fields { grid-template-columns: minmax(0, 1fr) !important; gap: 10px !important; }
         }
         `;
-        // [Asset Mommy 1.0.10] V3 플러그인은 iframe에서 실행되고 UI는 부모 doc에 렌더됨.
+        // [Asset Mommy 1.0.11] V3 플러그인은 iframe에서 실행되고 UI는 부모 doc에 렌더됨.
         // 따라서 (1) 로컬 document에 inject, (2) Risu.getRootDocument()로 부모에도 inject.
         // 추가로 모바일 UA 감지 시 @media (max-width: 480px) 막혀도 동작하도록 처리.
         const isMobileUA = /iPhone|iPad|iPod|Android|Mobile|Opera Mini/i.test(
@@ -54647,7 +54676,7 @@ ${embeddedTagTesterBlobImageScript}
                     methods.push('setCharacterToIndex(' + idx + ')');
                 } catch (e) { console.log('[LBX-SAVE] setCharacterToIndex err: ' + (e && e.message)); }
             }
-            // [Asset Mommy 1.0.10] ★보안 critical★ — setDatabase 전체 덮어쓰기 패턴 제거.
+            // [Asset Mommy 1.0.11] ★보안 critical★ — setDatabase 전체 덮어쓰기 패턴 제거.
             // RisuAI 보안 업데이트 후 getDatabase()가 plugins 필드를 제외한 stub을 반환하므로,
             // setDatabase(db)로 통째 덮어쓰면 plugins가 undefined가 되어 모든 플러그인이 삭제됨
             // (자기 자신 포함). setCharacter/setCharacterToIndex는 RisuAI 내부에서 안전한
@@ -54683,7 +54712,7 @@ ${embeddedTagTesterBlobImageScript}
             if (existing) existing.remove();
         }
 
-        // [Asset Mommy 1.0.10] 모바일 친화 모달 — 좁은 화면에서 거의 풀스크린.
+        // [Asset Mommy 1.0.11] 모바일 친화 모달 — 좁은 화면에서 거의 풀스크린.
         // 터치 타겟 44px+, 큰 폰트, single column, safe-area-inset 대응.
         function lbxModalShell(innerHtml) {
             lbxRemoveModal();
@@ -54727,7 +54756,7 @@ ${embeddedTagTesterBlobImageScript}
             if (b) b.innerHTML = html;
         }
 
-        // [Asset Mommy 1.0.10] 모든 lb-xnai.lb.extra 인덱스 (중복 정리용)
+        // [Asset Mommy 1.0.11] 모든 lb-xnai.lb.extra 인덱스 (중복 정리용)
         function lbxFindAllExtraIndices(char) {
             const lore = Array.isArray(char && char.globalLore) ? char.globalLore : [];
             const out = [];
@@ -54737,7 +54766,7 @@ ${embeddedTagTesterBlobImageScript}
             return out;
         }
 
-        // [Asset Mommy 1.0.10] 개별 extra 항목 삭제. 같은 dedup 패턴 — 인덱스 무관하게
+        // [Asset Mommy 1.0.11] 개별 extra 항목 삭제. 같은 dedup 패턴 — 인덱스 무관하게
         // 지정 content와 일치하는 항목만 제거 후 setCharacter 전체 save.
         async function lbxDeleteExtraAtIndex(targetIdx) {
             const { char, idx } = await lbxGetActiveCharacterWithIndex();
@@ -54762,7 +54791,7 @@ ${embeddedTagTesterBlobImageScript}
             return fresh;
         }
 
-        // [Asset Mommy 1.0.10] 한방 정리 — 모든 extra 제거
+        // [Asset Mommy 1.0.11] 한방 정리 — 모든 extra 제거
         async function lbxDeleteAllExtras() {
             const { char, idx } = await lbxGetActiveCharacterWithIndex();
             let fresh = null;
@@ -54812,7 +54841,7 @@ ${embeddedTagTesterBlobImageScript}
                 ? '<div style="color:#ffc757;font-size:12px;">⚠ 활성화된 모듈이 감지되지 않았습니다. 등장인물 정보가 모듈에 있다면, 추출 전에 해당 모듈을 채팅/글로벌에 활성화하세요.</div>'
                 : '';
 
-            // [Asset Mommy 1.0.10] manage 섹션 — 기존 lb-xnai.lb.extra 항목 목록 + 삭제
+            // [Asset Mommy 1.0.11] manage 섹션 — 기존 lb-xnai.lb.extra 항목 목록 + 삭제
             const buildManageHtml = (entries) => {
                 if (!entries.length) {
                     return `<div style="background:#1f2418;border:1px solid #3a4a2a;border-radius:8px;padding:10px 12px;color:#9bc28d;font-size:13px;">✓ 현재 캐릭터에 <b>lb-xnai.lb.extra</b> 항목이 없습니다. 아래에서 새로 추출하세요.</div>`;
