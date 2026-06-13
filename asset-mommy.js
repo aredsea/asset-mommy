@@ -1,10 +1,10 @@
 //@name AssetMommy
-//@display-name Asset Mommy 1.0.19
-//@version 1.0.19
+//@display-name Asset Mommy 1.0.20
+//@version 1.0.20
 //@api 3.0
 //@update-url https://raw.githubusercontent.com/aredsea/asset-mommy/main/asset-mommy.js
 //@description NovelAI 에셋 생성·관리 + 외견 추출기. iOS RisuAI 최적화.
-// Asset Mommy 1.0.19 — fork base: Asset maid 0.9.1 (NovelAIAutoAsset).
+// Asset Mommy 1.0.20 — fork base: Asset maid 0.9.1 (NovelAIAutoAsset).
 // Includes iOS RisuAI fixes: char enrichment via getCharacterFromIndex,
 // dedup lb-xnai.lb.extra, JSON parser robustness, cache invalidation.
 
@@ -34120,7 +34120,7 @@ body.naa-stream-image-guard-active .default-chat-screen .chat-message-container:
             }))
             .filter((lore) => {
                 if (!lore.content) return false;
-                // [Asset Mommy 1.0.19] 캐릭터 본인 로어북은 content만 있으면 모두 표시.
+                // [Asset Mommy 1.0.20] 캐릭터 본인 로어북은 content만 있으면 모두 표시.
                 if (sourceType === 'character') return true;
                 if (lore.score > 0) return true;
                 if (options.includeAlwaysActive && lore.alwaysActive) return true;
@@ -34130,11 +34130,51 @@ body.naa-stream-image-guard-active .default-chat-screen .chat-message-container:
             .sort((a, b) => b.score - a.score || a.title.localeCompare(b.title));
     }
 
+    // [Asset Mommy 1.0.20] 캐릭터 설명을 합성 로어북 항목으로 변환.
+    // 싱글 캐릭터 봇은 별도 로어북이 없어서 분석 대상 0개가 됨 → description을
+    // 가상 entry로 만들어 globalLore 앞에 prepend, 분석/매칭에 활용.
+    function ammSyntheticDescriptionEntry(character) {
+        if (!character) return null;
+        const desc = safeString(character.description || character.desc || '').trim();
+        const personality = safeString(character.personality || '').trim();
+        const scenario = safeString(character.scenario || character.scenarios || '').trim();
+        const charName = safeString(character.name || '캐릭터').trim();
+        const parts = [];
+        if (desc) parts.push('### Description\n' + desc);
+        if (personality) parts.push('### Personality\n' + personality);
+        if (scenario) parts.push('### Scenario\n' + scenario);
+        if (!parts.length) return null;
+        const content = parts.join('\n\n');
+        return {
+            key: charName,        // 캐릭터명을 키로 — score 매칭 통과 유도
+            secondkey: '',
+            keys: [charName],
+            content,
+            comment: '__amm_character_desc__',  // 식별용 (저장 안 됨, 메모리만)
+            name: charName + ' (캐릭터 설명)',
+            mode: 'normal',
+            alwaysActive: true,
+            constant: true,
+            selective: false,
+            useRegex: false,
+            insertorder: 0,
+            bookVersion: 2,
+            __synthetic: true,
+        };
+    }
+
     function getCharacterLorebookCandidates(character) {
-        // [Asset Mommy 1.0.19] 캐릭터 자체 globalLore는 최대한 살림.
-        // 원본은 score > 0 (캐릭터명 매칭) 항목만 통과 → 많은 항목이 잘림.
-        // 캐릭터 본인 로어북은 alwaysActive·keys 보유 항목도 모두 포함.
-        return normalizeLorebookCandidates(character?.globalLore, getCharacterAliases(character), {
+        // [Asset Mommy 1.0.20] description 합성 entry를 globalLore에 prepend.
+        const globalLore = Array.isArray(character?.globalLore) ? character.globalLore.slice() : [];
+        const synthDesc = ammSyntheticDescriptionEntry(character);
+        if (synthDesc) {
+            // 중복 방지 — 이미 동일 comment 있으면 skip
+            const alreadyHas = globalLore.some(
+                (e) => safeString(e && e.comment).trim() === '__amm_character_desc__',
+            );
+            if (!alreadyHas) globalLore.unshift(synthDesc);
+        }
+        return normalizeLorebookCandidates(globalLore, getCharacterAliases(character), {
             includeAlwaysActive: true,
             includeWithKeys: true,
             sourceType: 'character',
@@ -34250,7 +34290,7 @@ body.naa-stream-image-guard-active .default-chat-screen .chat-message-container:
         ]);
     }
 
-    // [Asset Mommy 1.0.19] lbx 추출기와 동일한 필터 적용 — 소악마/시스템/프리셋 모듈 제외.
+    // [Asset Mommy 1.0.20] lbx 추출기와 동일한 필터 적용 — 소악마/시스템/프리셋 모듈 제외.
     // 본체 UI도 이 필터를 통과한 모듈만 보여줌.
     function ammIsSomakModule(mod) {
         if (!mod) return false;
@@ -34486,7 +34526,7 @@ body.naa-stream-image-guard-active .default-chat-screen .chat-message-container:
             }
         } catch (e) { console.log('[NAA-DB] dump err: ' + (e && e.message)); }
 
-        // [Asset Mommy 1.0.19] enrichment 강화. currentChar를 이름/id로 매칭해
+        // [Asset Mommy 1.0.20] enrichment 강화. currentChar를 이름/id로 매칭해
         // 다중 캐릭터 환경에서도 정확히 currentChar 데이터를 해당 캐릭터에 적용.
         // getCurrentCharacterIndex가 없는 빌드에서도 동작.
         let currentChar = null;
@@ -53041,7 +53081,7 @@ ${embeddedTagTesterBlobImageScript}
         }
     }
 
-    // [Asset Mommy 1.0.19] Spotify 디자인 시스템 전면 적용.
+    // [Asset Mommy 1.0.20] Spotify 디자인 시스템 전면 적용.
     // 토큰: getdesign add spotify (VoltAgent/awesome-design-md) 기반.
     // - 배경: #121212 base / #181818 elevated / #282828 higher / #1f1f1f input
     // - 브랜드: Spotify Green #1ed760 (functional accent only)
@@ -53049,7 +53089,7 @@ ${embeddedTagTesterBlobImageScript}
     // - 버튼: pill radius, UPPERCASE label, 1.4-2px letter-spacing, 700 weight
     // - 모션: 100-160ms ease, transform/opacity 위주
     // - 간격: 8px base unit
-    // [Asset Mommy 1.0.19] CSS variables를 <html> inline style로 강제 설정.
+    // [Asset Mommy 1.0.20] CSS variables를 <html> inline style로 강제 설정.
     // 원본 플러그인이 :root에 --naa-panel:#1b1117 같은 burgundy 변수 박아두고
     // 거의 모든 색을 var(--naa-*) 로 참조 → 변수만 덮으면 자동 전환.
     // inline style은 specificity 1,0,0,0 — 어떤 !important CSS도 이김.
@@ -53119,7 +53159,7 @@ ${embeddedTagTesterBlobImageScript}
             }
         } catch (_) {}
     }
-    // [Asset Mommy 1.0.19] 직접 element.style.setProperty()로 inline style 박기.
+    // [Asset Mommy 1.0.20] 직접 element.style.setProperty()로 inline style 박기.
     // CSS cascade 싸움 포기. inline style은 specificity 1,0,0,0 — 어떤 !important CSS도 이김.
     // DOM 모든 .naa-* element 순회하면서 broken 영역 강제 fix.
     function ammSetStyles(el, styles) {
@@ -53383,7 +53423,8 @@ ${embeddedTagTesterBlobImageScript}
                 });
             });
             // 썸네일 정사각, 카드 풀너비. position:relative 로 fallback 아바타 absolute 배치 가능.
-            doc.querySelectorAll('.naa-source-card-thumb, .naa-character-source-card .naa-source-card-thumb').forEach((el) => {
+            // [v1.0.20] charx-grid-thumb도 함께 처리.
+            doc.querySelectorAll('.naa-source-card-thumb, .naa-character-source-card .naa-source-card-thumb, .naa-charx-grid-thumb').forEach((el) => {
                 ammSetStyles(el, {
                     position: 'relative',
                     width: '100%',
@@ -53396,12 +53437,17 @@ ${embeddedTagTesterBlobImageScript}
                     background: 'linear-gradient(135deg, #1ed760 0%, #169c46 100%)',
                 });
 
-                // [v1.0.19] fallback 아바타 — img가 hidden일 때 카드 이름 첫 글자 표시
-                const card = el.closest('.naa-source-card, .naa-character-source-card, button[data-naa-source-card]');
+                // [v1.0.20] fallback 아바타 — img가 hidden일 때 카드 이름 첫 글자 표시.
+                // charx-grid-card도 포함.
+                const card = el.closest('.naa-source-card, .naa-character-source-card, .naa-charx-grid-card, button[data-naa-source-card], label[data-naa-source-card]');
+                const titleEl = card && (card.querySelector('strong') || card.querySelector('.naa-charx-grid-card-title'));
                 const cardName = (card && (card.getAttribute('data-source-name') ||
                     card.getAttribute('aria-label') ||
                     card.getAttribute('title') ||
-                    (card.querySelector('strong') && card.querySelector('strong').textContent) || '')).trim();
+                    (titleEl && titleEl.textContent) || '')).trim();
+                // ALL 라벨 카드는 fallback 안 만듦 (원본 'ALL' 텍스트 유지)
+                const isAllCard = !!el.querySelector('.naa-empty-media-label');
+                if (isAllCard) return;
                 const initial = cardName ? cardName[0] : '?';
                 let fallback = el.querySelector('[data-amm-thumb-fallback]');
                 if (!fallback) {
@@ -53939,7 +53985,7 @@ ${embeddedTagTesterBlobImageScript}
             *, *::before, *::after { transition: none !important; animation: none !important; }
         }
 
-        /* ===== Asset Mommy 1.0.19 — Contract/burgundy theme killer =====
+        /* ===== Asset Mommy 1.0.20 — Contract/burgundy theme killer =====
            원본 플러그인이 가진 burgundy/wine + gold 테마 element들을
            높은 specificity로 모두 Spotify 디자인으로 강제 변경.
            셀렉터에 .naa-shell 또는 .naa-modal prefix를 추가해 인라인 스타일을 압도. */
@@ -55099,7 +55145,7 @@ ${embeddedTagTesterBlobImageScript}
                 padding: 10px !important; border-radius: 10px !important;
             }
         `;
-        // [Asset Mommy 1.0.19] V3 플러그인은 iframe에서 실행되고 UI는 부모 doc에 렌더됨.
+        // [Asset Mommy 1.0.20] V3 플러그인은 iframe에서 실행되고 UI는 부모 doc에 렌더됨.
         // [v1.0.12] 단순화 — 모바일 규칙도 @media 없이 평탄하게 들어있으므로
         // 별도 extraStyle 필요 없음. 단일 style 하나로 끝.
         const placeAtEnd = () => {
@@ -55669,7 +55715,7 @@ ${embeddedTagTesterBlobImageScript}
                     methods.push('setCharacterToIndex(' + idx + ')');
                 } catch (e) { console.log('[LBX-SAVE] setCharacterToIndex err: ' + (e && e.message)); }
             }
-            // [Asset Mommy 1.0.19] ★보안 critical★ — setDatabase 전체 덮어쓰기 패턴 제거.
+            // [Asset Mommy 1.0.20] ★보안 critical★ — setDatabase 전체 덮어쓰기 패턴 제거.
             // RisuAI 보안 업데이트 후 getDatabase()가 plugins 필드를 제외한 stub을 반환하므로,
             // setDatabase(db)로 통째 덮어쓰면 plugins가 undefined가 되어 모든 플러그인이 삭제됨
             // (자기 자신 포함). setCharacter/setCharacterToIndex는 RisuAI 내부에서 안전한
@@ -55705,7 +55751,7 @@ ${embeddedTagTesterBlobImageScript}
             if (existing) existing.remove();
         }
 
-        // [Asset Mommy 1.0.19] 모바일 친화 모달 — 좁은 화면에서 거의 풀스크린.
+        // [Asset Mommy 1.0.20] 모바일 친화 모달 — 좁은 화면에서 거의 풀스크린.
         // 터치 타겟 44px+, 큰 폰트, single column, safe-area-inset 대응.
         function lbxModalShell(innerHtml) {
             lbxRemoveModal();
@@ -55749,7 +55795,7 @@ ${embeddedTagTesterBlobImageScript}
             if (b) b.innerHTML = html;
         }
 
-        // [Asset Mommy 1.0.19] 모든 lb-xnai.lb.extra 인덱스 (중복 정리용)
+        // [Asset Mommy 1.0.20] 모든 lb-xnai.lb.extra 인덱스 (중복 정리용)
         function lbxFindAllExtraIndices(char) {
             const lore = Array.isArray(char && char.globalLore) ? char.globalLore : [];
             const out = [];
@@ -55759,7 +55805,7 @@ ${embeddedTagTesterBlobImageScript}
             return out;
         }
 
-        // [Asset Mommy 1.0.19] 개별 extra 항목 삭제. 같은 dedup 패턴 — 인덱스 무관하게
+        // [Asset Mommy 1.0.20] 개별 extra 항목 삭제. 같은 dedup 패턴 — 인덱스 무관하게
         // 지정 content와 일치하는 항목만 제거 후 setCharacter 전체 save.
         async function lbxDeleteExtraAtIndex(targetIdx) {
             const { char, idx } = await lbxGetActiveCharacterWithIndex();
@@ -55784,7 +55830,7 @@ ${embeddedTagTesterBlobImageScript}
             return fresh;
         }
 
-        // [Asset Mommy 1.0.19] 한방 정리 — 모든 extra 제거
+        // [Asset Mommy 1.0.20] 한방 정리 — 모든 extra 제거
         async function lbxDeleteAllExtras() {
             const { char, idx } = await lbxGetActiveCharacterWithIndex();
             let fresh = null;
@@ -55834,7 +55880,7 @@ ${embeddedTagTesterBlobImageScript}
                 ? '<div style="color:#ffc757;font-size:12px;">⚠ 활성화된 모듈이 감지되지 않았습니다. 등장인물 정보가 모듈에 있다면, 추출 전에 해당 모듈을 채팅/글로벌에 활성화하세요.</div>'
                 : '';
 
-            // [Asset Mommy 1.0.19] manage 섹션 — 기존 lb-xnai.lb.extra 항목 목록 + 삭제
+            // [Asset Mommy 1.0.20] manage 섹션 — 기존 lb-xnai.lb.extra 항목 목록 + 삭제
             const buildManageHtml = (entries) => {
                 if (!entries.length) {
                     return `<div style="background:#1f2418;border:1px solid #3a4a2a;border-radius:8px;padding:10px 12px;color:#9bc28d;font-size:13px;">✓ 현재 캐릭터에 <b>lb-xnai.lb.extra</b> 항목이 없습니다. 아래에서 새로 추출하세요.</div>`;
