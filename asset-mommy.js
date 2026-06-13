@@ -1,10 +1,10 @@
 //@name AssetMommy
-//@display-name Asset Mommy 1.0.4
-//@version 1.0.4
+//@display-name Asset Mommy 1.0.5
+//@version 1.0.5
 //@api 3.0
 //@update-url https://raw.githubusercontent.com/aredsea/asset-mommy/main/asset-mommy.js
 //@description NovelAI 에셋 생성·관리 + 외견 추출기. iOS RisuAI 최적화.
-// Asset Mommy 1.0.4 — fork base: Asset maid 0.9.1 (NovelAIAutoAsset).
+// Asset Mommy 1.0.5 — fork base: Asset maid 0.9.1 (NovelAIAutoAsset).
 // Includes iOS RisuAI fixes: char enrichment via getCharacterFromIndex,
 // dedup lb-xnai.lb.extra, JSON parser robustness, cache invalidation.
 
@@ -34456,9 +34456,9 @@ body.naa-stream-image-guard-active .default-chat-screen .chat-message-container:
             }
         } catch (e) { console.log('[NAA-DB] dump err: ' + (e && e.message)); }
 
-        // [Asset Mommy 1.0.4] 다중 경로 enrichment.
-        // getCharacterFromIndex(i) + getCharacter()(현재 선택 캐릭터, 에셋 저장 경로와 동일).
-        // 둘 중 하나라도 풀 데이터를 반환하면 그걸 사용.
+        // [Asset Mommy 1.0.5] enrichment 강화. currentChar를 이름/id로 매칭해
+        // 다중 캐릭터 환경에서도 정확히 currentChar 데이터를 해당 캐릭터에 적용.
+        // getCurrentCharacterIndex가 없는 빌드에서도 동작.
         let currentChar = null;
         let currentCharIdx = -1;
         try {
@@ -34470,6 +34470,22 @@ body.naa-stream-image-guard-active .default-chat-screen .chat-message-container:
         try {
             if (typeof Risu.getCharacter === 'function') currentChar = await Risu.getCharacter();
         } catch (_) {}
+        // currentChar의 이름/id로 rawCharacters에서 매칭 인덱스 찾기
+        const ammCharSig = (c) => {
+            if (!c) return '';
+            const id = safeString(c.chaId || c.id || c.uuid || '').trim();
+            if (id) return 'id:' + id;
+            return 'name:' + safeString(c.name || '').trim();
+        };
+        if (currentCharIdx < 0 && currentChar) {
+            const curSig = ammCharSig(currentChar);
+            if (curSig) {
+                const found = rawCharacters.findIndex((c) => ammCharSig(c) === curSig);
+                if (found >= 0) currentCharIdx = found;
+            }
+            // 단 1명이면 무조건 그 사람
+            if (currentCharIdx < 0 && rawCharacters.length === 1) currentCharIdx = 0;
+        }
         const pickField = (...candidates) => {
             for (const c of candidates) {
                 if (Array.isArray(c) && c.length > 0) return c;
@@ -34488,8 +34504,8 @@ body.naa-stream-image-guard-active .default-chat-screen .chat-message-container:
                             console.log('[NAA-ENRICH] getCharacterFromIndex(' + i + ') err: ' + (e && e.message));
                         }
                     }
-                    // 현재 활성 캐릭터면 getCharacter() 결과도 활용 (에셋 저장 동일 경로)
-                    const cur = (i === currentCharIdx || (currentCharIdx < 0 && rawCharacters.length === 1)) ? currentChar : null;
+                    // 매칭된 인덱스만 currentChar 적용 (다중 캐릭터 환경 안전)
+                    const cur = (i === currentCharIdx) ? currentChar : null;
                     if (full || cur) {
                         const merged = { ...c, ...(full || {}), ...(cur || {}) };
                         merged.additionalAssets = pickField(
@@ -52995,7 +53011,7 @@ ${embeddedTagTesterBlobImageScript}
         }
     }
 
-    // [Asset Mommy 1.0.4] Spotify 디자인 시스템 전면 적용.
+    // [Asset Mommy 1.0.5] Spotify 디자인 시스템 전면 적용.
     // 토큰: getdesign add spotify (VoltAgent/awesome-design-md) 기반.
     // - 배경: #121212 base / #181818 elevated / #282828 higher / #1f1f1f input
     // - 브랜드: Spotify Green #1ed760 (functional accent only)
@@ -53309,6 +53325,175 @@ ${embeddedTagTesterBlobImageScript}
         /* ===== Animation reduce-motion friendly ===== */
         @media (prefers-reduced-motion: reduce) {
             *, *::before, *::after { transition: none !important; animation: none !important; }
+        }
+
+        /* ===== Asset Mommy 1.0.5 — Contract/burgundy theme killer =====
+           원본 플러그인이 가진 burgundy/wine + gold 테마 element들을
+           높은 specificity로 모두 Spotify 디자인으로 강제 변경.
+           셀렉터에 .naa-shell 또는 .naa-modal prefix를 추가해 인라인 스타일을 압도. */
+        .naa-shell, .naa-shell *, .naa-modal, .naa-modal * {
+            --naa-contract-gold: var(--amm-accent) !important;
+        }
+        /* 헤더 — 원본의 burgundy linear-gradient 제거 */
+        .naa-shell .naa-head,
+        .naa-modal .naa-head {
+            background: var(--amm-bg-base) !important;
+            background-image: linear-gradient(180deg, rgba(30,215,96,.06) 0%, transparent 60%) !important;
+            border-bottom-color: var(--amm-border) !important;
+        }
+        .naa-shell .naa-head h1,
+        .naa-modal .naa-head h1 {
+            color: var(--amm-text) !important;
+            text-shadow: none !important;
+            font-family: 'CircularSp', 'SF Pro Display', -apple-system, system-ui, sans-serif !important;
+        }
+        /* 로어북 이미지 필터 recommendation box — burgundy gradient 제거 */
+        .naa-shell .naa-lorebook-image-filter-recommendation-box,
+        .naa-modal .naa-lorebook-image-filter-recommendation-box {
+            background: var(--amm-bg-elevated) !important;
+            background-image: linear-gradient(180deg, rgba(30,215,96,.08), rgba(30,215,96,.02)) !important;
+            border-color: var(--amm-accent) !important;
+            color: var(--amm-text) !important;
+            box-shadow: 0 0 0 1px rgba(30,215,96,.18) inset !important;
+        }
+        .naa-shell .naa-lorebook-image-filter-recommendation-box .naa-analysis-tool-copy strong,
+        .naa-shell .naa-lorebook-image-filter-recommendation-box .naa-help,
+        .naa-modal .naa-lorebook-image-filter-recommendation-box .naa-analysis-tool-copy strong,
+        .naa-modal .naa-lorebook-image-filter-recommendation-box .naa-help {
+            color: var(--amm-text) !important;
+        }
+        /* charx settings 카드 — burgundy 호버/선택 색 제거 */
+        .naa-shell .naa-charx-grid-card,
+        .naa-modal .naa-charx-grid-card {
+            background: var(--amm-bg-elevated) !important;
+            background-image: none !important;
+            border-color: var(--amm-border) !important;
+            color: var(--amm-text) !important;
+        }
+        .naa-shell .naa-charx-grid-card:hover,
+        .naa-modal .naa-charx-grid-card:hover {
+            background: var(--amm-bg-higher) !important;
+            border-color: var(--amm-border-strong) !important;
+        }
+        .naa-shell .naa-charx-grid-card.selected,
+        .naa-modal .naa-charx-grid-card.selected {
+            background: var(--amm-bg-higher) !important;
+            background-image: none !important;
+            border-color: var(--amm-accent) !important;
+            box-shadow: 0 0 0 2px var(--amm-accent) inset !important;
+        }
+        .naa-shell .naa-charx-grid-card-title,
+        .naa-modal .naa-charx-grid-card-title { color: var(--amm-text) !important; }
+        /* charx settings grid modal — burgundy gradient 제거 */
+        .naa-shell .naa-charx-settings-grid-modal,
+        .naa-modal .naa-charx-settings-grid-modal {
+            background: var(--amm-bg-base) !important;
+            background-image: none !important;
+        }
+        /* setting unit (옵션 카드들) — burgundy gradient 제거 */
+        .naa-shell .naa-setting-unit,
+        .naa-modal .naa-setting-unit {
+            background: var(--amm-bg-elevated) !important;
+            background-image: none !important;
+            border-color: var(--amm-border) !important;
+        }
+        .naa-shell .naa-setting-control-strip .naa-checkbox-plain-field,
+        .naa-shell .naa-setting-control-row .naa-checkbox-plain-field,
+        .naa-modal .naa-setting-control-strip .naa-checkbox-plain-field,
+        .naa-modal .naa-setting-control-row .naa-checkbox-plain-field {
+            background: var(--amm-bg-input) !important;
+            background-image: none !important;
+            border-color: var(--amm-border) !important;
+        }
+        .naa-shell .naa-setting-two-column-controls .naa-checkbox-plain-field::after,
+        .naa-modal .naa-setting-two-column-controls .naa-checkbox-plain-field::after {
+            background: var(--amm-bg-input) !important;
+            background-image: none !important;
+            border-color: var(--amm-border) !important;
+        }
+        /* charx 정규식·메타데이터 분석 상태 pill — burgundy unknown 제거 */
+        .naa-shell .naa-analysis-status-pill[data-tone="unknown"],
+        .naa-modal .naa-analysis-status-pill[data-tone="unknown"] {
+            border-color: var(--amm-border-strong) !important;
+            background: var(--amm-bg-higher) !important;
+            color: var(--amm-text-sub) !important;
+        }
+        .naa-shell .naa-analysis-status-pill[data-tone="success"],
+        .naa-modal .naa-analysis-status-pill[data-tone="success"] {
+            border-color: var(--amm-accent) !important;
+            background: rgba(30,215,96,.12) !important;
+            color: var(--amm-accent) !important;
+        }
+        .naa-shell .naa-analysis-status-pill[data-tone="error"],
+        .naa-modal .naa-analysis-status-pill[data-tone="error"] {
+            border-color: var(--amm-danger) !important;
+            background: rgba(243,114,127,.12) !important;
+            color: var(--amm-danger) !important;
+        }
+        .naa-shell .naa-analysis-status-pill[data-tone="partial"],
+        .naa-modal .naa-analysis-status-pill[data-tone="partial"] {
+            border-color: var(--amm-warn) !important;
+            background: rgba(255,164,43,.12) !important;
+            color: var(--amm-warn) !important;
+        }
+        /* runtime overlay (loading toast) — wine 제거 */
+        .naa-shell .naa-runtime-toast,
+        body .naa-runtime-toast,
+        body > .naa-runtime-toast {
+            background: var(--amm-bg-elevated) !important;
+            background-image: none !important;
+            border-color: var(--amm-border) !important;
+            color: var(--amm-text) !important;
+        }
+        .naa-shell .naa-runtime-btn:hover,
+        body .naa-runtime-btn:hover {
+            background: var(--amm-bg-higher) !important;
+            color: var(--amm-text) !important;
+            border-color: var(--amm-accent) !important;
+        }
+        /* AI error modal — wine 제거 */
+        .naa-shell .naa-ai-error-modal,
+        body .naa-ai-error-modal {
+            background: var(--amm-bg-elevated) !important;
+            background-image: none !important;
+            border-color: var(--amm-border) !important;
+            border-top-color: var(--amm-accent) !important;
+        }
+        .naa-shell .naa-ai-error-kicker,
+        body .naa-ai-error-kicker { color: var(--amm-accent) !important; }
+        /* source meta tags — wine 호환 */
+        .naa-shell .naa-source-meta-tag[data-tone="loading"],
+        .naa-modal .naa-source-meta-tag[data-tone="loading"],
+        .naa-shell .naa-task-notice[data-tone="loading"],
+        .naa-modal .naa-task-notice[data-tone="loading"] {
+            background: rgba(83,157,245,.16) !important;
+            color: var(--amm-info) !important;
+        }
+        /* asset metadata overlay — burgundy 제거 */
+        .naa-shell .naa-asset-meta-overlay,
+        .naa-modal .naa-asset-meta-overlay {
+            background: var(--amm-bg-higher) !important;
+            color: var(--amm-text) !important;
+        }
+        /* 모든 linear-gradient with burgundy color hardcode 제거 ─ 일반화 */
+        .naa-shell [style*="#5a2630"],
+        .naa-shell [style*="#3d1a22"],
+        .naa-shell [style*="#281821"],
+        .naa-shell [style*="#1a1016"],
+        .naa-shell [style*="#1b1117"],
+        .naa-shell [style*="#20151b"],
+        .naa-modal [style*="#5a2630"],
+        .naa-modal [style*="#3d1a22"],
+        .naa-modal [style*="#281821"],
+        .naa-modal [style*="#1a1016"] {
+            background: var(--amm-bg-elevated) !important;
+            background-image: none !important;
+        }
+        /* charx dirty indicator — wine gold → green */
+        .naa-shell .naa-charx-settings-dirty-indicator,
+        .naa-modal .naa-charx-settings-dirty-indicator {
+            background: var(--amm-accent) !important;
+            box-shadow: 0 0 0 2px rgba(30,215,96,.22), 0 0 10px rgba(30,215,96,.45) !important;
         }
 
         /* ===== Mobile (≤480px) refinements ===== */
@@ -54054,7 +54239,7 @@ ${embeddedTagTesterBlobImageScript}
                     methods.push('setCharacterToIndex(' + idx + ')');
                 } catch (e) { console.log('[LBX-SAVE] setCharacterToIndex err: ' + (e && e.message)); }
             }
-            // [Asset Mommy 1.0.4] ★보안 critical★ — setDatabase 전체 덮어쓰기 패턴 제거.
+            // [Asset Mommy 1.0.5] ★보안 critical★ — setDatabase 전체 덮어쓰기 패턴 제거.
             // RisuAI 보안 업데이트 후 getDatabase()가 plugins 필드를 제외한 stub을 반환하므로,
             // setDatabase(db)로 통째 덮어쓰면 plugins가 undefined가 되어 모든 플러그인이 삭제됨
             // (자기 자신 포함). setCharacter/setCharacterToIndex는 RisuAI 내부에서 안전한
@@ -54090,7 +54275,7 @@ ${embeddedTagTesterBlobImageScript}
             if (existing) existing.remove();
         }
 
-        // [Asset Mommy 1.0.4] 모바일 친화 모달 — 좁은 화면에서 거의 풀스크린.
+        // [Asset Mommy 1.0.5] 모바일 친화 모달 — 좁은 화면에서 거의 풀스크린.
         // 터치 타겟 44px+, 큰 폰트, single column, safe-area-inset 대응.
         function lbxModalShell(innerHtml) {
             lbxRemoveModal();
@@ -54134,7 +54319,7 @@ ${embeddedTagTesterBlobImageScript}
             if (b) b.innerHTML = html;
         }
 
-        // [Asset Mommy 1.0.4] 모든 lb-xnai.lb.extra 인덱스 (중복 정리용)
+        // [Asset Mommy 1.0.5] 모든 lb-xnai.lb.extra 인덱스 (중복 정리용)
         function lbxFindAllExtraIndices(char) {
             const lore = Array.isArray(char && char.globalLore) ? char.globalLore : [];
             const out = [];
@@ -54144,7 +54329,7 @@ ${embeddedTagTesterBlobImageScript}
             return out;
         }
 
-        // [Asset Mommy 1.0.4] 개별 extra 항목 삭제. 같은 dedup 패턴 — 인덱스 무관하게
+        // [Asset Mommy 1.0.5] 개별 extra 항목 삭제. 같은 dedup 패턴 — 인덱스 무관하게
         // 지정 content와 일치하는 항목만 제거 후 setCharacter 전체 save.
         async function lbxDeleteExtraAtIndex(targetIdx) {
             const { char, idx } = await lbxGetActiveCharacterWithIndex();
@@ -54169,7 +54354,7 @@ ${embeddedTagTesterBlobImageScript}
             return fresh;
         }
 
-        // [Asset Mommy 1.0.4] 한방 정리 — 모든 extra 제거
+        // [Asset Mommy 1.0.5] 한방 정리 — 모든 extra 제거
         async function lbxDeleteAllExtras() {
             const { char, idx } = await lbxGetActiveCharacterWithIndex();
             let fresh = null;
@@ -54219,7 +54404,7 @@ ${embeddedTagTesterBlobImageScript}
                 ? '<div style="color:#ffc757;font-size:12px;">⚠ 활성화된 모듈이 감지되지 않았습니다. 등장인물 정보가 모듈에 있다면, 추출 전에 해당 모듈을 채팅/글로벌에 활성화하세요.</div>'
                 : '';
 
-            // [Asset Mommy 1.0.4] manage 섹션 — 기존 lb-xnai.lb.extra 항목 목록 + 삭제
+            // [Asset Mommy 1.0.5] manage 섹션 — 기존 lb-xnai.lb.extra 항목 목록 + 삭제
             const buildManageHtml = (entries) => {
                 if (!entries.length) {
                     return `<div style="background:#1f2418;border:1px solid #3a4a2a;border-radius:8px;padding:10px 12px;color:#9bc28d;font-size:13px;">✓ 현재 캐릭터에 <b>lb-xnai.lb.extra</b> 항목이 없습니다. 아래에서 새로 추출하세요.</div>`;
