@@ -1,10 +1,10 @@
 //@name AssetMommy
-//@display-name Asset Mommy 1.0.20
-//@version 1.0.20
+//@display-name Asset Mommy 1.0.21
+//@version 1.0.21
 //@api 3.0
 //@update-url https://raw.githubusercontent.com/aredsea/asset-mommy/main/asset-mommy.js
 //@description NovelAI 에셋 생성·관리 + 외견 추출기. iOS RisuAI 최적화.
-// Asset Mommy 1.0.20 — fork base: Asset maid 0.9.1 (NovelAIAutoAsset).
+// Asset Mommy 1.0.21 — fork base: Asset maid 0.9.1 (NovelAIAutoAsset).
 // Includes iOS RisuAI fixes: char enrichment via getCharacterFromIndex,
 // dedup lb-xnai.lb.extra, JSON parser robustness, cache invalidation.
 
@@ -34120,7 +34120,7 @@ body.naa-stream-image-guard-active .default-chat-screen .chat-message-container:
             }))
             .filter((lore) => {
                 if (!lore.content) return false;
-                // [Asset Mommy 1.0.20] 캐릭터 본인 로어북은 content만 있으면 모두 표시.
+                // [Asset Mommy 1.0.21] 캐릭터 본인 로어북은 content만 있으면 모두 표시.
                 if (sourceType === 'character') return true;
                 if (lore.score > 0) return true;
                 if (options.includeAlwaysActive && lore.alwaysActive) return true;
@@ -34130,7 +34130,7 @@ body.naa-stream-image-guard-active .default-chat-screen .chat-message-container:
             .sort((a, b) => b.score - a.score || a.title.localeCompare(b.title));
     }
 
-    // [Asset Mommy 1.0.20] 캐릭터 설명을 합성 로어북 항목으로 변환.
+    // [Asset Mommy 1.0.21] 캐릭터 설명을 합성 로어북 항목으로 변환.
     // 싱글 캐릭터 봇은 별도 로어북이 없어서 분석 대상 0개가 됨 → description을
     // 가상 entry로 만들어 globalLore 앞에 prepend, 분석/매칭에 활용.
     function ammSyntheticDescriptionEntry(character) {
@@ -34164,7 +34164,7 @@ body.naa-stream-image-guard-active .default-chat-screen .chat-message-container:
     }
 
     function getCharacterLorebookCandidates(character) {
-        // [Asset Mommy 1.0.20] description 합성 entry를 globalLore에 prepend.
+        // [Asset Mommy 1.0.21] description 합성 entry를 globalLore에 prepend.
         const globalLore = Array.isArray(character?.globalLore) ? character.globalLore.slice() : [];
         const synthDesc = ammSyntheticDescriptionEntry(character);
         if (synthDesc) {
@@ -34290,7 +34290,7 @@ body.naa-stream-image-guard-active .default-chat-screen .chat-message-container:
         ]);
     }
 
-    // [Asset Mommy 1.0.20] lbx 추출기와 동일한 필터 적용 — 소악마/시스템/프리셋 모듈 제외.
+    // [Asset Mommy 1.0.21] lbx 추출기와 동일한 필터 적용 — 소악마/시스템/프리셋 모듈 제외.
     // 본체 UI도 이 필터를 통과한 모듈만 보여줌.
     function ammIsSomakModule(mod) {
         if (!mod) return false;
@@ -34526,7 +34526,7 @@ body.naa-stream-image-guard-active .default-chat-screen .chat-message-container:
             }
         } catch (e) { console.log('[NAA-DB] dump err: ' + (e && e.message)); }
 
-        // [Asset Mommy 1.0.20] enrichment 강화. currentChar를 이름/id로 매칭해
+        // [Asset Mommy 1.0.21] enrichment 강화. currentChar를 이름/id로 매칭해
         // 다중 캐릭터 환경에서도 정확히 currentChar 데이터를 해당 캐릭터에 적용.
         // getCurrentCharacterIndex가 없는 빌드에서도 동작.
         let currentChar = null;
@@ -53081,7 +53081,7 @@ ${embeddedTagTesterBlobImageScript}
         }
     }
 
-    // [Asset Mommy 1.0.20] Spotify 디자인 시스템 전면 적용.
+    // [Asset Mommy 1.0.21] Spotify 디자인 시스템 전면 적용.
     // 토큰: getdesign add spotify (VoltAgent/awesome-design-md) 기반.
     // - 배경: #121212 base / #181818 elevated / #282828 higher / #1f1f1f input
     // - 브랜드: Spotify Green #1ed760 (functional accent only)
@@ -53089,7 +53089,7 @@ ${embeddedTagTesterBlobImageScript}
     // - 버튼: pill radius, UPPERCASE label, 1.4-2px letter-spacing, 700 weight
     // - 모션: 100-160ms ease, transform/opacity 위주
     // - 간격: 8px base unit
-    // [Asset Mommy 1.0.20] CSS variables를 <html> inline style로 강제 설정.
+    // [Asset Mommy 1.0.21] CSS variables를 <html> inline style로 강제 설정.
     // 원본 플러그인이 :root에 --naa-panel:#1b1117 같은 burgundy 변수 박아두고
     // 거의 모든 색을 var(--naa-*) 로 참조 → 변수만 덮으면 자동 전환.
     // inline style은 specificity 1,0,0,0 — 어떤 !important CSS도 이김.
@@ -53159,7 +53159,7 @@ ${embeddedTagTesterBlobImageScript}
             }
         } catch (_) {}
     }
-    // [Asset Mommy 1.0.20] 직접 element.style.setProperty()로 inline style 박기.
+    // [Asset Mommy 1.0.21] 직접 element.style.setProperty()로 inline style 박기.
     // CSS cascade 싸움 포기. inline style은 specificity 1,0,0,0 — 어떤 !important CSS도 이김.
     // DOM 모든 .naa-* element 순회하면서 broken 영역 강제 fix.
     function ammSetStyles(el, styles) {
@@ -53389,7 +53389,8 @@ ${embeddedTagTesterBlobImageScript}
             });
 
             // ⑥ 캐릭터 source picker (캐릭터 선택)
-            doc.querySelectorAll('.naa-source-picker, .naa-character-source-picker').forEach((el) => {
+            // [v1.0.21] charx-settings-grid도 함께. 원본은 7컬럼이라 모바일에서 카드 ~50px
+            doc.querySelectorAll('.naa-source-picker, .naa-character-source-picker, .naa-charx-settings-grid').forEach((el) => {
                 ammSetStyles(el, {
                     display: 'grid',
                     'grid-template-columns': 'repeat(2, minmax(0, 1fr))',
@@ -53641,6 +53642,116 @@ ${embeddedTagTesterBlobImageScript}
                     width: '100%',
                     'min-width': '0',
                     height: 'auto',
+                });
+            });
+
+            // ⑧ [v1.0.21] 의상 레퍼런스 생성 모달 — 풀스크린 + 헤더 wrap + body scroll
+            doc.querySelectorAll('.naa-outfit-generate-backdrop, [data-naa-outfit-generate-modal]').forEach((el) => {
+                ammSetStyles(el, {
+                    position: 'fixed',
+                    inset: '0',
+                    padding: '0',
+                    display: 'grid',
+                    'place-items': 'stretch',
+                    background: 'rgba(0,0,0,.85)',
+                });
+            });
+            doc.querySelectorAll('.naa-outfit-generate-modal').forEach((el) => {
+                ammSetStyles(el, {
+                    width: '100vw',
+                    'max-width': '100vw',
+                    height: '100vh',
+                    'max-height': '100vh',
+                    'border-radius': '0',
+                    padding: '0',
+                    display: 'grid',
+                    'grid-template-rows': 'auto minmax(0, 1fr)',
+                    overflow: 'hidden',
+                    background: '#121212',
+                });
+            });
+            // 헤더 — 세로 stack, 버튼들 flex-wrap
+            doc.querySelectorAll('.naa-outfit-generate-modal .naa-asset-picker-head').forEach((el) => {
+                ammSetStyles(el, {
+                    display: 'flex',
+                    'flex-direction': 'column',
+                    gap: '10px',
+                    padding: '12px 14px env(safe-area-inset-top, 12px)',
+                    'min-height': 'auto',
+                    background: '#181818',
+                    'border-bottom': '1px solid #292929',
+                    'box-sizing': 'border-box',
+                    width: '100%',
+                });
+            });
+            doc.querySelectorAll('.naa-outfit-generate-titlebar').forEach((el) => {
+                ammSetStyles(el, {
+                    display: 'flex',
+                    'flex-direction': 'column',
+                    gap: '4px',
+                    width: '100%',
+                    'min-width': '0',
+                });
+            });
+            doc.querySelectorAll('.naa-outfit-generate-titlebar > strong').forEach((el) => {
+                ammSetStyles(el, {
+                    'font-size': '14px',
+                    'font-weight': '700',
+                    color: '#fff',
+                    'white-space': 'normal',
+                    overflow: 'visible',
+                    'text-overflow': 'clip',
+                    'word-break': 'keep-all',
+                    'overflow-wrap': 'normal',
+                });
+            });
+            doc.querySelectorAll('.naa-outfit-generate-modal .naa-asset-picker-head .naa-inline, .naa-outfit-generate-modal .naa-asset-picker-head .naa-inline.compact').forEach((el) => {
+                ammSetStyles(el, {
+                    display: 'grid',
+                    'grid-template-columns': 'repeat(2, minmax(0, 1fr))',
+                    gap: '8px',
+                    width: '100%',
+                    'min-width': '0',
+                });
+            });
+            doc.querySelectorAll('.naa-outfit-generate-modal .naa-asset-picker-head .naa-btn').forEach((el) => {
+                ammSetStyles(el, {
+                    width: '100%',
+                    'min-height': '44px',
+                    'min-width': '0',
+                    'box-sizing': 'border-box',
+                    'font-size': '13px',
+                    padding: '10px 12px',
+                });
+            });
+            // 본문 — 스크롤 가능
+            doc.querySelectorAll('.naa-outfit-generate-body').forEach((el) => {
+                ammSetStyles(el, {
+                    display: 'block',
+                    overflow: 'auto',
+                    '-webkit-overflow-scrolling': 'touch',
+                    padding: '14px',
+                    'padding-bottom': 'calc(14px + env(safe-area-inset-bottom, 0))',
+                    width: '100%',
+                    height: '100%',
+                    'min-height': '0',
+                    'box-sizing': 'border-box',
+                });
+            });
+            doc.querySelectorAll('.naa-outfit-generate-preview, .naa-outfit-generate-prompts').forEach((el) => {
+                ammSetStyles(el, {
+                    width: '100%',
+                    'max-width': '100%',
+                    'min-width': '0',
+                    'margin-bottom': '12px',
+                });
+            });
+            doc.querySelectorAll('.naa-outfit-generate-overview-grid, .naa-outfit-generate-part-grid').forEach((el) => {
+                ammSetStyles(el, {
+                    display: 'grid',
+                    'grid-template-columns': 'minmax(0, 1fr)',
+                    gap: '10px',
+                    width: '100%',
                 });
             });
         } catch (_) {}
@@ -53985,7 +54096,7 @@ ${embeddedTagTesterBlobImageScript}
             *, *::before, *::after { transition: none !important; animation: none !important; }
         }
 
-        /* ===== Asset Mommy 1.0.20 — Contract/burgundy theme killer =====
+        /* ===== Asset Mommy 1.0.21 — Contract/burgundy theme killer =====
            원본 플러그인이 가진 burgundy/wine + gold 테마 element들을
            높은 specificity로 모두 Spotify 디자인으로 강제 변경.
            셀렉터에 .naa-shell 또는 .naa-modal prefix를 추가해 인라인 스타일을 압도. */
@@ -55145,7 +55256,7 @@ ${embeddedTagTesterBlobImageScript}
                 padding: 10px !important; border-radius: 10px !important;
             }
         `;
-        // [Asset Mommy 1.0.20] V3 플러그인은 iframe에서 실행되고 UI는 부모 doc에 렌더됨.
+        // [Asset Mommy 1.0.21] V3 플러그인은 iframe에서 실행되고 UI는 부모 doc에 렌더됨.
         // [v1.0.12] 단순화 — 모바일 규칙도 @media 없이 평탄하게 들어있으므로
         // 별도 extraStyle 필요 없음. 단일 style 하나로 끝.
         const placeAtEnd = () => {
@@ -55490,26 +55601,40 @@ ${embeddedTagTesterBlobImageScript}
             return out.join('\n\n').trim() + '\n';
         }
 
+        // [Asset Mommy 1.0.21] 추출 포맷 변경. Real World/Avatar 폐기 →
+        // 의상·상황·장면별로 가변 라벨 (Casual / Maid / NSFW / Sleep / Beach 등) 추출.
+        // 사용자가 가진 에셋 파일명 패턴에서 의상명 추론해 그 명칭을 그대로 라벨로 사용.
         const LBX_SYSTEM_PROMPT = [
             'You are a data-labeling assistant for an image-generation pipeline (NovelAI / Danbooru tags).',
-            "Given a character roster with their lorebook text and asset filenames, extract each character's VISUAL APPEARANCE as Danbooru tags.",
+            "Given a character's lorebook text and asset filenames, extract per-OUTFIT/SCENE appearance variations as Danbooru tags.",
             '',
             'OUTPUT FORMAT (Markdown, starting at heading level 2):',
             '## Character Image Tags',
             '',
             '### <Character display name>',
-            'Real World: <comma-separated danbooru tags for their real-world / mundane look, omit the line if unknown>',
-            'Avatar: <comma-separated danbooru tags for their in-story / avatar / costume look, omit the line if unknown>',
+            '<OutfitLabel1>: <comma-separated danbooru tags for that outfit/scene>',
+            '<OutfitLabel2>: <comma-separated danbooru tags for that outfit/scene>',
+            '... (one line per outfit/scene found)',
             '',
-            'RULES:',
-            '- Always start each character block with `1boy`/`1girl`/`1man`/`1woman` as appropriate.',
-            '- Use common, objective, visualizable Danbooru tags: hair (length+color+style), eye color, body type, skin, attire (color+material+item), distinctive features, weapon/prop.',
+            'OUTFIT/SCENE LABELS — derive from asset filenames and lorebook content:',
+            '- Look at asset filenames carefully. Common patterns embed outfit/scene tokens, e.g.',
+            '  `Char_casual_smile`, `Char_maid_blush`, `Char_school_pose`, `Char_bath_nude`,',
+            '  `Char_sleep_pajamas`, `Char_date_dress`, `Char_swimsuit`, `Char_nsfw_*`.',
+            '- Group assets by the outfit/scene token. Each unique token becomes one label.',
+            '- Use the token verbatim as the label (PascalCase or as-is), e.g. `Casual:`, `Maid:`, `Sleep:`, `Date:`, `Swimsuit:`, `NSFW:`, `School:`, `Bath:`, `Combat:`, `Sport:`.',
+            '- If lorebook describes an outfit explicitly (e.g. "wears a maid uniform at the café"), add that as its own labeled line.',
+            '- NEVER use generic labels `Real World:` or `Avatar:` — use specific outfit/scene names only.',
+            '',
+            'TAG RULES:',
+            '- Always start each line with `1boy`/`1girl`/`1man`/`1woman` as appropriate.',
+            '- Use common, objective, visualizable Danbooru tags: hair (length+color+style), eye color, body type, skin tone, attire pieces (color+material+item), distinctive features, props, expression, pose, location/background hints if specific to that outfit/scene.',
             '- Keep tags lowercase, comma-separated, no weights, no prose.',
-            '- Cross-reference BOTH the lorebook descriptions AND the asset filenames to infer appearance.',
-            '- If a character clearly has two distinct looks (mundane vs avatar/costume), split into Real World / Avatar lines. Otherwise emit only the line you can support.',
+            '- Each outfit/scene line should ONLY contain tags that change for that scene. Hair/eye color repeats across lines OK, but include outfit-specific tags (maid_outfit, swimsuit, pajamas, etc.) only on the matching line.',
+            '- Cross-reference BOTH the lorebook descriptions AND the asset filenames to infer outfit details.',
+            '- If the character has only one consistent look across all assets, emit ONE labeled line with a sensible label (e.g. `Default:` or the dominant outfit name).',
             '- Skip characters with no usable visual information.',
             '- Output ONLY the markdown, no explanations, no code fences.',
-            '- CRITICAL: Output ONLY appearance tags. NEVER copy or imitate the lorebook\'s in-character text, status windows, dialogue, diary entries, or any formatting like ♪[...]♪. Those are SOURCE material to read, never to reproduce. Each line is either a `##`/`###` heading or a `Real World:`/`Avatar:` tag line — nothing else.',
+            '- CRITICAL: Output ONLY appearance tags. NEVER copy or imitate the lorebook\'s in-character text, status windows, dialogue, diary entries, or any formatting like ♪[...]♪. Those are SOURCE material to read, never to reproduce.',
         ].join('\n');
 
         function lbxBuildUserPrompt(src) {
@@ -55577,19 +55702,19 @@ ${embeddedTagTesterBlobImageScript}
         }
 
         // LLM이 로어북의 대사체·상태창 형식을 모방해 붙이는 사족을 제거한다.
-        // danbooru 태그 추출 결과에서 유효한 라인만 남긴다:
-        //  - `## ...` (섹션 헤더)
-        //  - `### ...` (캐릭터 이름)
-        //  - `Real World: ...` / `Avatar: ...` (태그 라인)
-        // 그 외(♪[...]♪ 같은 캐릭터 코멘트, 빈 줄 외 잡설)는 버린다.
+        // [v1.0.21] 태그 라인 라벨이 가변(Casual/Maid/Sleep/etc) — 라벨 패턴 일반화.
+        // 유효한 라인:
+        //  - `## ...` / `### ...` (헤더)
+        //  - `<Label>: <danbooru tags>` — Label 은 영문/숫자/공백/언더바/하이픈 + ':' 로 끝
         function lbxSanitizeOutput(text) {
             const lines = lbxSS(text).split('\n');
             const kept = [];
+            // 라벨 패턴: 영문/숫자/공백/-/_ 만 사용, 30자 이내, 끝에 ':' 또는 ': '
+            const labelRe = /^[A-Za-z][A-Za-z0-9 _\-]{0,29}\s*:/;
             for (const raw of lines) {
                 const line = raw.replace(/\s+$/, '');
                 const trimmed = line.trim();
                 if (!trimmed) {
-                    // 빈 줄은 직전이 내용일 때만 보존 (연속 빈 줄 방지)
                     if (kept.length && kept[kept.length - 1] !== '') kept.push('');
                     continue;
                 }
@@ -55597,20 +55722,17 @@ ${embeddedTagTesterBlobImageScript}
                     kept.push(line);
                     continue;
                 }
-                if (/^(real world|avatar)\s*:/i.test(trimmed)) {
-                    // 태그 라인: 라벨만 남기고 끝에 붙은 사족 컷.
-                    // danbooru 태그는 영문/숫자/공백/콤마/괄호/하이픈 위주.
-                    // ♪[ 나 한글이 시작되는 지점부터는 사족으로 보고 잘라낸다.
-                    const cut = line.replace(/\s*[♪♥☆★|【\[][\s\S]*$/u, '').replace(/[가-힣][\s\S]*$/u, (m) => {
-                        // 한글이 태그 중간에 나오면 그 지점부터 제거 (라벨 'Real World:'는 영문이라 안전)
-                        return '';
-                    }).replace(/\s+$/, '').replace(/,\s*$/, '');
+                if (labelRe.test(trimmed)) {
+                    // 태그 라인: 한글/특수 코멘트가 시작되는 지점부터 제거
+                    const cut = line.replace(/\s*[♪♥☆★|【\[][\s\S]*$/u, '')
+                                    .replace(/[가-힣][\s\S]*$/u, '')
+                                    .replace(/\s+$/, '')
+                                    .replace(/,\s*$/, '');
                     kept.push(cut);
                     continue;
                 }
                 // 그 외 라인은 사족으로 간주하고 버림
             }
-            // 끝쪽 빈 줄 제거
             while (kept.length && kept[kept.length - 1] === '') kept.pop();
             return kept.join('\n').trim();
         }
@@ -55715,7 +55837,7 @@ ${embeddedTagTesterBlobImageScript}
                     methods.push('setCharacterToIndex(' + idx + ')');
                 } catch (e) { console.log('[LBX-SAVE] setCharacterToIndex err: ' + (e && e.message)); }
             }
-            // [Asset Mommy 1.0.20] ★보안 critical★ — setDatabase 전체 덮어쓰기 패턴 제거.
+            // [Asset Mommy 1.0.21] ★보안 critical★ — setDatabase 전체 덮어쓰기 패턴 제거.
             // RisuAI 보안 업데이트 후 getDatabase()가 plugins 필드를 제외한 stub을 반환하므로,
             // setDatabase(db)로 통째 덮어쓰면 plugins가 undefined가 되어 모든 플러그인이 삭제됨
             // (자기 자신 포함). setCharacter/setCharacterToIndex는 RisuAI 내부에서 안전한
@@ -55751,7 +55873,7 @@ ${embeddedTagTesterBlobImageScript}
             if (existing) existing.remove();
         }
 
-        // [Asset Mommy 1.0.20] 모바일 친화 모달 — 좁은 화면에서 거의 풀스크린.
+        // [Asset Mommy 1.0.21] 모바일 친화 모달 — 좁은 화면에서 거의 풀스크린.
         // 터치 타겟 44px+, 큰 폰트, single column, safe-area-inset 대응.
         function lbxModalShell(innerHtml) {
             lbxRemoveModal();
@@ -55795,7 +55917,7 @@ ${embeddedTagTesterBlobImageScript}
             if (b) b.innerHTML = html;
         }
 
-        // [Asset Mommy 1.0.20] 모든 lb-xnai.lb.extra 인덱스 (중복 정리용)
+        // [Asset Mommy 1.0.21] 모든 lb-xnai.lb.extra 인덱스 (중복 정리용)
         function lbxFindAllExtraIndices(char) {
             const lore = Array.isArray(char && char.globalLore) ? char.globalLore : [];
             const out = [];
@@ -55805,7 +55927,7 @@ ${embeddedTagTesterBlobImageScript}
             return out;
         }
 
-        // [Asset Mommy 1.0.20] 개별 extra 항목 삭제. 같은 dedup 패턴 — 인덱스 무관하게
+        // [Asset Mommy 1.0.21] 개별 extra 항목 삭제. 같은 dedup 패턴 — 인덱스 무관하게
         // 지정 content와 일치하는 항목만 제거 후 setCharacter 전체 save.
         async function lbxDeleteExtraAtIndex(targetIdx) {
             const { char, idx } = await lbxGetActiveCharacterWithIndex();
@@ -55830,7 +55952,7 @@ ${embeddedTagTesterBlobImageScript}
             return fresh;
         }
 
-        // [Asset Mommy 1.0.20] 한방 정리 — 모든 extra 제거
+        // [Asset Mommy 1.0.21] 한방 정리 — 모든 extra 제거
         async function lbxDeleteAllExtras() {
             const { char, idx } = await lbxGetActiveCharacterWithIndex();
             let fresh = null;
@@ -55880,7 +56002,7 @@ ${embeddedTagTesterBlobImageScript}
                 ? '<div style="color:#ffc757;font-size:12px;">⚠ 활성화된 모듈이 감지되지 않았습니다. 등장인물 정보가 모듈에 있다면, 추출 전에 해당 모듈을 채팅/글로벌에 활성화하세요.</div>'
                 : '';
 
-            // [Asset Mommy 1.0.20] manage 섹션 — 기존 lb-xnai.lb.extra 항목 목록 + 삭제
+            // [Asset Mommy 1.0.21] manage 섹션 — 기존 lb-xnai.lb.extra 항목 목록 + 삭제
             const buildManageHtml = (entries) => {
                 if (!entries.length) {
                     return `<div style="background:#1f2418;border:1px solid #3a4a2a;border-radius:8px;padding:10px 12px;color:#9bc28d;font-size:13px;">✓ 현재 캐릭터에 <b>lb-xnai.lb.extra</b> 항목이 없습니다. 아래에서 새로 추출하세요.</div>`;
