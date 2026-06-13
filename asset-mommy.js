@@ -1,10 +1,10 @@
 //@name AssetMommy
-//@display-name Asset Mommy 1.0.15
-//@version 1.0.15
+//@display-name Asset Mommy 1.0.16
+//@version 1.0.16
 //@api 3.0
 //@update-url https://raw.githubusercontent.com/aredsea/asset-mommy/main/asset-mommy.js
 //@description NovelAI 에셋 생성·관리 + 외견 추출기. iOS RisuAI 최적화.
-// Asset Mommy 1.0.15 — fork base: Asset maid 0.9.1 (NovelAIAutoAsset).
+// Asset Mommy 1.0.16 — fork base: Asset maid 0.9.1 (NovelAIAutoAsset).
 // Includes iOS RisuAI fixes: char enrichment via getCharacterFromIndex,
 // dedup lb-xnai.lb.extra, JSON parser robustness, cache invalidation.
 
@@ -34120,7 +34120,7 @@ body.naa-stream-image-guard-active .default-chat-screen .chat-message-container:
             }))
             .filter((lore) => {
                 if (!lore.content) return false;
-                // [Asset Mommy 1.0.15] 캐릭터 본인 로어북은 content만 있으면 모두 표시.
+                // [Asset Mommy 1.0.16] 캐릭터 본인 로어북은 content만 있으면 모두 표시.
                 if (sourceType === 'character') return true;
                 if (lore.score > 0) return true;
                 if (options.includeAlwaysActive && lore.alwaysActive) return true;
@@ -34131,7 +34131,7 @@ body.naa-stream-image-guard-active .default-chat-screen .chat-message-container:
     }
 
     function getCharacterLorebookCandidates(character) {
-        // [Asset Mommy 1.0.15] 캐릭터 자체 globalLore는 최대한 살림.
+        // [Asset Mommy 1.0.16] 캐릭터 자체 globalLore는 최대한 살림.
         // 원본은 score > 0 (캐릭터명 매칭) 항목만 통과 → 많은 항목이 잘림.
         // 캐릭터 본인 로어북은 alwaysActive·keys 보유 항목도 모두 포함.
         return normalizeLorebookCandidates(character?.globalLore, getCharacterAliases(character), {
@@ -34250,7 +34250,7 @@ body.naa-stream-image-guard-active .default-chat-screen .chat-message-container:
         ]);
     }
 
-    // [Asset Mommy 1.0.15] lbx 추출기와 동일한 필터 적용 — 소악마/시스템/프리셋 모듈 제외.
+    // [Asset Mommy 1.0.16] lbx 추출기와 동일한 필터 적용 — 소악마/시스템/프리셋 모듈 제외.
     // 본체 UI도 이 필터를 통과한 모듈만 보여줌.
     function ammIsSomakModule(mod) {
         if (!mod) return false;
@@ -34486,7 +34486,7 @@ body.naa-stream-image-guard-active .default-chat-screen .chat-message-container:
             }
         } catch (e) { console.log('[NAA-DB] dump err: ' + (e && e.message)); }
 
-        // [Asset Mommy 1.0.15] enrichment 강화. currentChar를 이름/id로 매칭해
+        // [Asset Mommy 1.0.16] enrichment 강화. currentChar를 이름/id로 매칭해
         // 다중 캐릭터 환경에서도 정확히 currentChar 데이터를 해당 캐릭터에 적용.
         // getCurrentCharacterIndex가 없는 빌드에서도 동작.
         let currentChar = null;
@@ -53041,7 +53041,7 @@ ${embeddedTagTesterBlobImageScript}
         }
     }
 
-    // [Asset Mommy 1.0.15] Spotify 디자인 시스템 전면 적용.
+    // [Asset Mommy 1.0.16] Spotify 디자인 시스템 전면 적용.
     // 토큰: getdesign add spotify (VoltAgent/awesome-design-md) 기반.
     // - 배경: #121212 base / #181818 elevated / #282828 higher / #1f1f1f input
     // - 브랜드: Spotify Green #1ed760 (functional accent only)
@@ -53049,7 +53049,7 @@ ${embeddedTagTesterBlobImageScript}
     // - 버튼: pill radius, UPPERCASE label, 1.4-2px letter-spacing, 700 weight
     // - 모션: 100-160ms ease, transform/opacity 위주
     // - 간격: 8px base unit
-    // [Asset Mommy 1.0.15] CSS variables를 <html> inline style로 강제 설정.
+    // [Asset Mommy 1.0.16] CSS variables를 <html> inline style로 강제 설정.
     // 원본 플러그인이 :root에 --naa-panel:#1b1117 같은 burgundy 변수 박아두고
     // 거의 모든 색을 var(--naa-*) 로 참조 → 변수만 덮으면 자동 전환.
     // inline style은 specificity 1,0,0,0 — 어떤 !important CSS도 이김.
@@ -53452,7 +53452,7 @@ ${embeddedTagTesterBlobImageScript}
             *, *::before, *::after { transition: none !important; animation: none !important; }
         }
 
-        /* ===== Asset Mommy 1.0.15 — Contract/burgundy theme killer =====
+        /* ===== Asset Mommy 1.0.16 — Contract/burgundy theme killer =====
            원본 플러그인이 가진 burgundy/wine + gold 테마 element들을
            높은 specificity로 모두 Spotify 디자인으로 강제 변경.
            셀렉터에 .naa-shell 또는 .naa-modal prefix를 추가해 인라인 스타일을 압도. */
@@ -54484,8 +54484,135 @@ ${embeddedTagTesterBlobImageScript}
                 box-shadow: 0 0 0 2px var(--amm-accent, #1ed760) inset !important;
                 background: var(--amm-bg-higher, #282828) !important;
             }
+
+            /* ===== [v1.0.16] CARD 내부 구조 fix — wrapping label/span 투명화 ===== */
+            /* 컴팩트 로어북 카드의 <label class="naa-lorebook-card-pick"> 가 단일 자식이라
+               카드 grid의 첫 컬럼에 갇혀서 내용이 32px 안에 압축됨. display:contents 로
+               label 자체를 layout에서 빼서 자식(input + body span)이 카드 grid의 직접 자식이 됨. */
+            html body .naa-modal .naa-lorebook-card-compact > .naa-lorebook-card-pick,
+            html body .naa-modal .naa-lorebook-card > .naa-lorebook-card-pick {
+                display: contents !important;
+            }
+            /* compact card 구조 강제 — grid 32px + 1fr, label은 display:contents로 자식 흐름 */
+            html body .naa-modal .naa-lorebook-card-compact {
+                display: grid !important;
+                grid-template-columns: 32px minmax(0, 1fr) !important;
+                gap: 12px !important; padding: 14px !important;
+                border-radius: 10px !important;
+                background: var(--amm-bg-elevated, #181818) !important;
+                width: 100% !important; max-width: 100% !important; min-width: 0 !important;
+                box-sizing: border-box !important;
+                align-items: start !important;
+            }
+            /* compact card에서 풀린 자식들이 알맞은 위치에 가도록 */
+            html body .naa-modal .naa-lorebook-card-compact > .naa-lorebook-card-pick > input[type="checkbox"] {
+                grid-column: 1 !important;
+                width: 24px !important; height: 24px !important;
+                margin: 4px 0 0 !important; justify-self: center !important;
+                accent-color: var(--amm-accent, #1ed760) !important;
+            }
+            html body .naa-modal .naa-lorebook-card-compact > .naa-lorebook-card-pick > .naa-lorebook-card-body {
+                grid-column: 2 !important;
+                display: grid !important; gap: 6px !important;
+                min-width: 0 !important; max-width: 100% !important;
+                width: 100% !important;
+                align-content: start !important;
+            }
+
+            /* 모듈 카드도 동일 — span class="naa-module-item-body" 가 카드의 단일 자식 */
+            html body .naa-modal .naa-module-item > .naa-module-item-body {
+                display: contents !important;
+            }
+            html body .naa-modal .naa-module-item {
+                display: grid !important;
+                grid-template-columns: minmax(0, 1fr) !important;
+                grid-auto-rows: auto !important;
+                gap: 10px !important;
+                padding: 14px !important; border-radius: 10px !important;
+                background: var(--amm-bg-elevated, #181818) !important;
+                background-image: none !important;
+                width: 100% !important; max-width: 100% !important; min-width: 0 !important;
+                box-sizing: border-box !important;
+                min-height: 0 !important;
+                overflow: hidden !important;
+            }
+            /* item-body가 contents가 되면 그 자식들 (pick, stat-row, meta-row)이
+               .naa-module-item의 직접 자식. 각자 행 차지 */
+            html body .naa-modal .naa-module-item > .naa-module-item-body > .naa-module-pick,
+            html body .naa-modal .naa-module-item > .naa-module-item-body > .naa-module-stat-row,
+            html body .naa-modal .naa-module-item > .naa-module-item-body > .naa-module-meta-row {
+                grid-column: 1 !important;
+                width: 100% !important; min-width: 0 !important;
+                max-width: 100% !important;
+                box-sizing: border-box !important;
+            }
+            html body .naa-modal .naa-module-item .naa-module-pick {
+                display: grid !important;
+                grid-template-columns: 28px minmax(0, 1fr) !important;
+                grid-auto-rows: auto !important;
+                gap: 10px !important;
+                align-items: center !important;
+                min-height: 44px !important; padding-right: 0 !important;
+            }
+            html body .naa-modal .naa-module-item .naa-module-pick input[type="checkbox"] {
+                grid-column: 1 !important;
+                width: 22px !important; height: 22px !important;
+                margin: 0 !important; justify-self: center !important;
+                accent-color: var(--amm-accent, #1ed760) !important;
+            }
+            html body .naa-modal .naa-module-item .naa-module-pick > .naa-module-select-dot,
+            html body .naa-modal .naa-module-item .naa-module-pick .naa-module-select-dot {
+                display: none !important;
+            }
+            html body .naa-modal .naa-module-item .naa-module-pick .naa-module-name {
+                grid-column: 2 !important;
+                display: block !important;
+                -webkit-line-clamp: unset !important;
+                -webkit-box-orient: horizontal !important;
+                min-height: 0 !important;
+                max-height: none !important;
+                font-size: 14px !important; font-weight: 700 !important;
+                line-height: 1.4 !important;
+                color: var(--amm-text, #fff) !important;
+                white-space: normal !important; overflow: visible !important;
+                text-overflow: clip !important;
+                word-break: keep-all !important;
+                overflow-wrap: normal !important;
+                letter-spacing: 0 !important;
+            }
+
+            /* 모듈 그리드를 진짜로 1컬럼 강제 — chains에 attribute selector 추가해 보강 */
+            html body .naa-modal [class*="naa-module-grid"],
+            html body .naa-modal [class*="naa-module-card-grid"],
+            html body .naa-modal .naa-lorebook-grid.naa-module-grid.naa-module-card-grid {
+                display: grid !important;
+                grid-template-columns: minmax(0, 1fr) !important;
+                grid-auto-flow: row !important;
+                grid-auto-columns: unset !important;
+                gap: 10px !important;
+                padding: 10px !important;
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+
+            /* 캐릭터 source picker (캐릭터 선택 영역)도 강제로 단일 컬럼 / 자연 너비 */
+            html body .naa-modal .naa-character-source-section .naa-character-source-picker,
+            html body .naa-modal .naa-character-source-picker {
+                display: grid !important;
+                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+                grid-auto-flow: row !important;
+                grid-auto-columns: unset !important;
+                gap: 10px !important; padding: 10px !important;
+                width: 100% !important; max-width: 100% !important;
+                overflow-x: visible !important;
+            }
+            html body .naa-modal .naa-character-source-card {
+                width: auto !important; max-width: 100% !important;
+                min-width: 0 !important;
+                padding: 10px !important; border-radius: 10px !important;
+            }
         `;
-        // [Asset Mommy 1.0.15] V3 플러그인은 iframe에서 실행되고 UI는 부모 doc에 렌더됨.
+        // [Asset Mommy 1.0.16] V3 플러그인은 iframe에서 실행되고 UI는 부모 doc에 렌더됨.
         // [v1.0.12] 단순화 — 모바일 규칙도 @media 없이 평탄하게 들어있으므로
         // 별도 extraStyle 필요 없음. 단일 style 하나로 끝.
         const placeAtEnd = () => {
@@ -55055,7 +55182,7 @@ ${embeddedTagTesterBlobImageScript}
                     methods.push('setCharacterToIndex(' + idx + ')');
                 } catch (e) { console.log('[LBX-SAVE] setCharacterToIndex err: ' + (e && e.message)); }
             }
-            // [Asset Mommy 1.0.15] ★보안 critical★ — setDatabase 전체 덮어쓰기 패턴 제거.
+            // [Asset Mommy 1.0.16] ★보안 critical★ — setDatabase 전체 덮어쓰기 패턴 제거.
             // RisuAI 보안 업데이트 후 getDatabase()가 plugins 필드를 제외한 stub을 반환하므로,
             // setDatabase(db)로 통째 덮어쓰면 plugins가 undefined가 되어 모든 플러그인이 삭제됨
             // (자기 자신 포함). setCharacter/setCharacterToIndex는 RisuAI 내부에서 안전한
@@ -55091,7 +55218,7 @@ ${embeddedTagTesterBlobImageScript}
             if (existing) existing.remove();
         }
 
-        // [Asset Mommy 1.0.15] 모바일 친화 모달 — 좁은 화면에서 거의 풀스크린.
+        // [Asset Mommy 1.0.16] 모바일 친화 모달 — 좁은 화면에서 거의 풀스크린.
         // 터치 타겟 44px+, 큰 폰트, single column, safe-area-inset 대응.
         function lbxModalShell(innerHtml) {
             lbxRemoveModal();
@@ -55135,7 +55262,7 @@ ${embeddedTagTesterBlobImageScript}
             if (b) b.innerHTML = html;
         }
 
-        // [Asset Mommy 1.0.15] 모든 lb-xnai.lb.extra 인덱스 (중복 정리용)
+        // [Asset Mommy 1.0.16] 모든 lb-xnai.lb.extra 인덱스 (중복 정리용)
         function lbxFindAllExtraIndices(char) {
             const lore = Array.isArray(char && char.globalLore) ? char.globalLore : [];
             const out = [];
@@ -55145,7 +55272,7 @@ ${embeddedTagTesterBlobImageScript}
             return out;
         }
 
-        // [Asset Mommy 1.0.15] 개별 extra 항목 삭제. 같은 dedup 패턴 — 인덱스 무관하게
+        // [Asset Mommy 1.0.16] 개별 extra 항목 삭제. 같은 dedup 패턴 — 인덱스 무관하게
         // 지정 content와 일치하는 항목만 제거 후 setCharacter 전체 save.
         async function lbxDeleteExtraAtIndex(targetIdx) {
             const { char, idx } = await lbxGetActiveCharacterWithIndex();
@@ -55170,7 +55297,7 @@ ${embeddedTagTesterBlobImageScript}
             return fresh;
         }
 
-        // [Asset Mommy 1.0.15] 한방 정리 — 모든 extra 제거
+        // [Asset Mommy 1.0.16] 한방 정리 — 모든 extra 제거
         async function lbxDeleteAllExtras() {
             const { char, idx } = await lbxGetActiveCharacterWithIndex();
             let fresh = null;
@@ -55220,7 +55347,7 @@ ${embeddedTagTesterBlobImageScript}
                 ? '<div style="color:#ffc757;font-size:12px;">⚠ 활성화된 모듈이 감지되지 않았습니다. 등장인물 정보가 모듈에 있다면, 추출 전에 해당 모듈을 채팅/글로벌에 활성화하세요.</div>'
                 : '';
 
-            // [Asset Mommy 1.0.15] manage 섹션 — 기존 lb-xnai.lb.extra 항목 목록 + 삭제
+            // [Asset Mommy 1.0.16] manage 섹션 — 기존 lb-xnai.lb.extra 항목 목록 + 삭제
             const buildManageHtml = (entries) => {
                 if (!entries.length) {
                     return `<div style="background:#1f2418;border:1px solid #3a4a2a;border-radius:8px;padding:10px 12px;color:#9bc28d;font-size:13px;">✓ 현재 캐릭터에 <b>lb-xnai.lb.extra</b> 항목이 없습니다. 아래에서 새로 추출하세요.</div>`;
