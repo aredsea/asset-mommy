@@ -1,10 +1,10 @@
 //@name AssetMommy
-//@display-name Asset Mommy 1.0.5
-//@version 1.0.5
+//@display-name Asset Mommy 1.0.6
+//@version 1.0.6
 //@api 3.0
 //@update-url https://raw.githubusercontent.com/aredsea/asset-mommy/main/asset-mommy.js
 //@description NovelAI 에셋 생성·관리 + 외견 추출기. iOS RisuAI 최적화.
-// Asset Mommy 1.0.5 — fork base: Asset maid 0.9.1 (NovelAIAutoAsset).
+// Asset Mommy 1.0.6 — fork base: Asset maid 0.9.1 (NovelAIAutoAsset).
 // Includes iOS RisuAI fixes: char enrichment via getCharacterFromIndex,
 // dedup lb-xnai.lb.extra, JSON parser robustness, cache invalidation.
 
@@ -34456,7 +34456,7 @@ body.naa-stream-image-guard-active .default-chat-screen .chat-message-container:
             }
         } catch (e) { console.log('[NAA-DB] dump err: ' + (e && e.message)); }
 
-        // [Asset Mommy 1.0.5] enrichment 강화. currentChar를 이름/id로 매칭해
+        // [Asset Mommy 1.0.6] enrichment 강화. currentChar를 이름/id로 매칭해
         // 다중 캐릭터 환경에서도 정확히 currentChar 데이터를 해당 캐릭터에 적용.
         // getCurrentCharacterIndex가 없는 빌드에서도 동작.
         let currentChar = null;
@@ -53011,7 +53011,7 @@ ${embeddedTagTesterBlobImageScript}
         }
     }
 
-    // [Asset Mommy 1.0.5] Spotify 디자인 시스템 전면 적용.
+    // [Asset Mommy 1.0.6] Spotify 디자인 시스템 전면 적용.
     // 토큰: getdesign add spotify (VoltAgent/awesome-design-md) 기반.
     // - 배경: #121212 base / #181818 elevated / #282828 higher / #1f1f1f input
     // - 브랜드: Spotify Green #1ed760 (functional accent only)
@@ -53327,7 +53327,7 @@ ${embeddedTagTesterBlobImageScript}
             *, *::before, *::after { transition: none !important; animation: none !important; }
         }
 
-        /* ===== Asset Mommy 1.0.5 — Contract/burgundy theme killer =====
+        /* ===== Asset Mommy 1.0.6 — Contract/burgundy theme killer =====
            원본 플러그인이 가진 burgundy/wine + gold 테마 element들을
            높은 specificity로 모두 Spotify 디자인으로 강제 변경.
            셀렉터에 .naa-shell 또는 .naa-modal prefix를 추가해 인라인 스타일을 압도. */
@@ -53726,7 +53726,41 @@ ${embeddedTagTesterBlobImageScript}
             .naa-outfit-fields { grid-template-columns: minmax(0, 1fr) !important; gap: 10px !important; }
         }
         `;
-        document.head.appendChild(style);
+        // [Asset Mommy 1.0.6] CSS cascade 우선순위 확보.
+        // 원본 플러그인은 modal 안에 <style>을 inline 주입하므로 DOM 순서상 우리보다 늦음 →
+        // 같은 specificity일 때 그쪽이 이김. 해결: 우리 style을 body 끝에 두고,
+        // MutationObserver로 새 style이 추가될 때마다 우리 것을 다시 끝으로 이동.
+        const placeAtEnd = () => {
+            const target = document.body || document.documentElement;
+            if (!target) return;
+            if (style.parentNode !== target || target.lastChild !== style) {
+                target.appendChild(style);
+            }
+        };
+        placeAtEnd();
+        // 첫 진입 시 body가 아직 없을 수도 있어서 DOMContentLoaded에도 한 번
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', placeAtEnd, { once: true });
+        }
+        // MutationObserver — body 자식 변동을 모니터링해서 새 style/플러그인 modal이
+        // 들어올 때마다 우리 style을 다시 끝으로 이동.
+        try {
+            const obs = new MutationObserver((mutations) => {
+                let needsMove = false;
+                for (const m of mutations) {
+                    for (const n of m.addedNodes) {
+                        if (n === style) continue;
+                        // 새 element가 추가됐고 그게 우리 style 뒤에 있으면 다시 이동
+                        if (n.nodeType === 1) { needsMove = true; break; }
+                    }
+                    if (needsMove) break;
+                }
+                if (needsMove) placeAtEnd();
+            });
+            obs.observe(document.documentElement, { childList: true, subtree: true });
+        } catch (_) {}
+        // 보험: 1초마다 한번 확인 (저비용, idle 시 동작)
+        setInterval(placeAtEnd, 1000);
     }
 
     async function initialize() {
@@ -54239,7 +54273,7 @@ ${embeddedTagTesterBlobImageScript}
                     methods.push('setCharacterToIndex(' + idx + ')');
                 } catch (e) { console.log('[LBX-SAVE] setCharacterToIndex err: ' + (e && e.message)); }
             }
-            // [Asset Mommy 1.0.5] ★보안 critical★ — setDatabase 전체 덮어쓰기 패턴 제거.
+            // [Asset Mommy 1.0.6] ★보안 critical★ — setDatabase 전체 덮어쓰기 패턴 제거.
             // RisuAI 보안 업데이트 후 getDatabase()가 plugins 필드를 제외한 stub을 반환하므로,
             // setDatabase(db)로 통째 덮어쓰면 plugins가 undefined가 되어 모든 플러그인이 삭제됨
             // (자기 자신 포함). setCharacter/setCharacterToIndex는 RisuAI 내부에서 안전한
@@ -54275,7 +54309,7 @@ ${embeddedTagTesterBlobImageScript}
             if (existing) existing.remove();
         }
 
-        // [Asset Mommy 1.0.5] 모바일 친화 모달 — 좁은 화면에서 거의 풀스크린.
+        // [Asset Mommy 1.0.6] 모바일 친화 모달 — 좁은 화면에서 거의 풀스크린.
         // 터치 타겟 44px+, 큰 폰트, single column, safe-area-inset 대응.
         function lbxModalShell(innerHtml) {
             lbxRemoveModal();
@@ -54319,7 +54353,7 @@ ${embeddedTagTesterBlobImageScript}
             if (b) b.innerHTML = html;
         }
 
-        // [Asset Mommy 1.0.5] 모든 lb-xnai.lb.extra 인덱스 (중복 정리용)
+        // [Asset Mommy 1.0.6] 모든 lb-xnai.lb.extra 인덱스 (중복 정리용)
         function lbxFindAllExtraIndices(char) {
             const lore = Array.isArray(char && char.globalLore) ? char.globalLore : [];
             const out = [];
@@ -54329,7 +54363,7 @@ ${embeddedTagTesterBlobImageScript}
             return out;
         }
 
-        // [Asset Mommy 1.0.5] 개별 extra 항목 삭제. 같은 dedup 패턴 — 인덱스 무관하게
+        // [Asset Mommy 1.0.6] 개별 extra 항목 삭제. 같은 dedup 패턴 — 인덱스 무관하게
         // 지정 content와 일치하는 항목만 제거 후 setCharacter 전체 save.
         async function lbxDeleteExtraAtIndex(targetIdx) {
             const { char, idx } = await lbxGetActiveCharacterWithIndex();
@@ -54354,7 +54388,7 @@ ${embeddedTagTesterBlobImageScript}
             return fresh;
         }
 
-        // [Asset Mommy 1.0.5] 한방 정리 — 모든 extra 제거
+        // [Asset Mommy 1.0.6] 한방 정리 — 모든 extra 제거
         async function lbxDeleteAllExtras() {
             const { char, idx } = await lbxGetActiveCharacterWithIndex();
             let fresh = null;
@@ -54404,7 +54438,7 @@ ${embeddedTagTesterBlobImageScript}
                 ? '<div style="color:#ffc757;font-size:12px;">⚠ 활성화된 모듈이 감지되지 않았습니다. 등장인물 정보가 모듈에 있다면, 추출 전에 해당 모듈을 채팅/글로벌에 활성화하세요.</div>'
                 : '';
 
-            // [Asset Mommy 1.0.5] manage 섹션 — 기존 lb-xnai.lb.extra 항목 목록 + 삭제
+            // [Asset Mommy 1.0.6] manage 섹션 — 기존 lb-xnai.lb.extra 항목 목록 + 삭제
             const buildManageHtml = (entries) => {
                 if (!entries.length) {
                     return `<div style="background:#1f2418;border:1px solid #3a4a2a;border-radius:8px;padding:10px 12px;color:#9bc28d;font-size:13px;">✓ 현재 캐릭터에 <b>lb-xnai.lb.extra</b> 항목이 없습니다. 아래에서 새로 추출하세요.</div>`;
