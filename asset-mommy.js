@@ -1,10 +1,10 @@
 //@name AssetMommy
-//@display-name Asset Mommy 1.0.1
-//@version 1.0.1
+//@display-name Asset Mommy 1.0.2
+//@version 1.0.2
 //@api 3.0
 //@update-url https://raw.githubusercontent.com/aredsea/asset-mommy/main/asset-mommy.js
 //@description NovelAI 에셋 생성·관리 + 외견 추출기. iOS RisuAI 최적화.
-// Asset Mommy 1.0.1 — fork base: Asset maid 0.9.1 (NovelAIAutoAsset).
+// Asset Mommy 1.0.2 — fork base: Asset maid 0.9.1 (NovelAIAutoAsset).
 // Includes iOS RisuAI fixes: char enrichment via getCharacterFromIndex,
 // dedup lb-xnai.lb.extra, JSON parser robustness, cache invalidation.
 
@@ -34456,7 +34456,7 @@ body.naa-stream-image-guard-active .default-chat-screen .chat-message-container:
             }
         } catch (e) { console.log('[NAA-DB] dump err: ' + (e && e.message)); }
 
-        // [Asset Mommy 1.0.1] 다중 경로 enrichment.
+        // [Asset Mommy 1.0.2] 다중 경로 enrichment.
         // getCharacterFromIndex(i) + getCharacter()(현재 선택 캐릭터, 에셋 저장 경로와 동일).
         // 둘 중 하나라도 풀 데이터를 반환하면 그걸 사용.
         let currentChar = null;
@@ -52995,7 +52995,248 @@ ${embeddedTagTesterBlobImageScript}
         }
     }
 
+    // [Asset Mommy 1.0.2] 모바일 우선 글로벌 CSS 주입.
+    // 기존 데스크톱 위주의 inline CSS를 480px 이하 화면에서 압도적으로 덮음.
+    // initialize() 진입 즉시 head에 1회 inject — 이후 모든 UI 렌더에 자동 적용.
+    function injectMobileFirstOverrides() {
+        if (!globalThis.document || document.getElementById('amm-mobile-overrides')) return;
+        const style = document.createElement('style');
+        style.id = 'amm-mobile-overrides';
+        style.textContent = `
+        /* ===== Asset Mommy mobile-first overrides (480px and below) ===== */
+        @media (max-width: 480px) {
+            /* 모달 — 풀스크린 활용 */
+            .naa-shell { padding: 0 !important; min-height: 100vh !important; min-height: 100dvh !important; }
+            .naa-modal {
+                width: 100vw !important; max-width: 100vw !important;
+                height: 100vh !important; height: 100dvh !important; max-height: 100dvh !important;
+                border-radius: 0 !important; border: 0 !important;
+                margin: 0 !important; padding: 0 !important;
+            }
+            /* 헤더 — 세로 정렬, 큰 터치 영역 */
+            .naa-head {
+                display: grid !important;
+                grid-template-columns: minmax(0, 1fr) !important;
+                gap: 8px !important;
+                padding: 10px 12px env(safe-area-inset-top, 10px) 12px !important;
+                min-height: auto !important;
+                background: linear-gradient(180deg, #1e2227, #181b1f) !important;
+            }
+            .naa-title-wrap { width: 100% !important; flex: none !important; }
+            .naa-title-row { gap: 8px !important; }
+            .naa-head h1 { font-size: 15px !important; line-height: 1.3 !important; }
+            .naa-actions {
+                width: 100% !important; flex: none !important;
+                display: grid !important; grid-template-columns: 1fr 1fr !important;
+                gap: 6px !important; justify-content: stretch !important;
+            }
+            .naa-actions .naa-btn { width: 100% !important; min-height: 44px !important; font-size: 14px !important; padding: 10px 12px !important; }
+            .naa-actions .naa-save-status { grid-column: 1 / -1 !important; justify-self: end !important; }
+
+            /* 탭 — 가로 스크롤 + 큰 터치 영역 */
+            .naa-tabs {
+                padding: 6px 10px 0 !important;
+                gap: 4px !important;
+                overflow-x: auto !important;
+                scroll-snap-type: x mandatory !important;
+                -webkit-overflow-scrolling: touch !important;
+            }
+            .naa-tab {
+                min-height: 44px !important;
+                padding: 10px 14px !important;
+                font-size: 13px !important;
+                scroll-snap-align: start !important;
+                flex: 0 0 auto !important;
+            }
+            .naa-tab-panel { gap: 12px !important; }
+
+            /* 본문 — 패딩 줄이고, 가로 grid 모두 단일 컬럼 */
+            .naa-body { padding: 10px !important; gap: 10px !important; }
+            .naa-section { padding: 10px !important; gap: 10px !important; border-radius: 8px !important; }
+            .naa-grid,
+            .naa-model-pair-grid,
+            .naa-metadata-analysis-controls,
+            .naa-hook-status { grid-template-columns: minmax(0, 1fr) !important; }
+
+            /* 필드 — iOS 16px input (zoom 방지) */
+            .naa-field input,
+            .naa-field select,
+            .naa-field textarea,
+            .naa-stepper input,
+            input[type="text"], input[type="number"], input[type="url"], input[type="email"], select, textarea {
+                font-size: 16px !important;
+                min-height: 44px !important;
+                padding: 10px 12px !important;
+                border-radius: 8px !important;
+            }
+            textarea { min-height: 96px !important; }
+
+            /* 버튼 — 44px 터치 타겟 */
+            .naa-btn, .naa-icon-btn, .naa-subtab,
+            .naa-source-filter-btn, .naa-asset-filter-tab, .naa-asset-filter-toggle,
+            .naa-source-filter-action-btn {
+                min-height: 44px !important;
+                font-size: 14px !important;
+                padding: 10px 14px !important;
+                border-radius: 8px !important;
+            }
+            .naa-info-icon, .naa-icon-btn { min-width: 44px !important; min-height: 44px !important; }
+
+            /* 분석 액션 행 — 4컬럼 grid를 세로로 stack */
+            .naa-asset-action-row,
+            #naa-character-panel-assets:not(.hidden) .naa-asset-action-row {
+                display: grid !important;
+                grid-template-columns: minmax(0, 1fr) !important;
+                height: auto !important; min-height: auto !important;
+                gap: 8px !important; padding: 4px 0 !important;
+            }
+            .naa-asset-action-left,
+            #naa-character-panel-assets:not(.hidden) .naa-asset-action-left {
+                display: grid !important;
+                grid-template-columns: minmax(0, 1fr) !important;
+                width: 100% !important; max-width: 100% !important;
+                gap: 8px !important;
+            }
+            .naa-asset-action-left > * { width: 100% !important; min-width: 0 !important; }
+            #naa-character-panel-assets:not(.hidden) #naa-analyze-selected-assets {
+                width: 100% !important; min-width: 0 !important; max-width: 100% !important;
+                min-height: 44px !important;
+            }
+            .naa-analysis-image-only-toggle,
+            .naa-analysis-overwrite-toggle,
+            #naa-character-panel-assets:not(.hidden) .naa-analysis-image-only-toggle,
+            #naa-character-panel-assets:not(.hidden) .naa-analysis-overwrite-toggle {
+                width: 100% !important; min-width: 0 !important;
+                padding: 10px !important; min-height: 44px !important;
+                border: 1px solid var(--naa-line, #2c3238) !important;
+                border-radius: 8px !important;
+                background: rgba(255,255,255,.02) !important;
+                display: flex !important; align-items: center !important; gap: 10px !important;
+                box-sizing: border-box !important;
+            }
+            .naa-analysis-image-only-toggle span,
+            .naa-analysis-overwrite-toggle span {
+                font-size: 13px !important; line-height: 1.3 !important; flex: 1 1 auto !important;
+            }
+
+            /* 프롬프트 분석 컨트롤 — 단일 컬럼 */
+            .naa-reference-analysis-control {
+                display: grid !important;
+                grid-template-columns: minmax(0, 1fr) auto !important;
+                grid-template-areas: "btn info" "toggle toggle" !important;
+                gap: 8px !important; width: 100% !important;
+            }
+            .naa-reference-analysis-control .naa-reference-analyze { grid-area: btn !important; width: 100% !important; }
+            .naa-reference-analysis-control .naa-reference-analysis-info { grid-area: info !important; }
+            .naa-reference-analysis-control .naa-analysis-image-only-toggle { grid-area: toggle !important; }
+
+            /* 캐릭터 source picker — 작은 카드 + 가로 스크롤 */
+            .naa-source-picker,
+            .naa-character-source-section .naa-character-source-picker {
+                grid-auto-columns: 110px !important;
+                gap: 8px !important;
+                padding: 4px 2px 8px !important;
+                overflow-x: auto !important;
+                -webkit-overflow-scrolling: touch !important;
+            }
+            .naa-source-card,
+            .naa-character-source-section .naa-character-source-card {
+                min-height: 96px !important; padding: 6px !important; border-radius: 8px !important;
+            }
+            .naa-source-card-thumb,
+            .naa-character-source-section .naa-character-source-card .naa-source-card-thumb {
+                height: 72px !important;
+            }
+
+            /* 캐릭터/모듈 행 — padding 줄이고 read-friendly */
+            .naa-character-row, .naa-character-row[data-naa-prompt-row] {
+                padding: 10px !important; gap: 10px !important; border-radius: 8px !important;
+            }
+            .naa-character-row[data-naa-prompt-row] > .naa-character-head { padding-bottom: 4px !important; }
+            .naa-character-row[data-naa-prompt-row] > .naa-character-head > strong { font-size: 13px !important; padding-top: 0 !important; }
+
+            /* 로어북 아이템 — 패딩 키워서 터치 친화 */
+            .naa-lorebook-item {
+                padding: 12px !important; min-height: 44px !important;
+                grid-template-columns: 24px minmax(0, 1fr) !important;
+                gap: 10px !important;
+                border-radius: 8px !important;
+            }
+            .naa-lorebook-item input { width: 22px !important; height: 22px !important; }
+            .naa-lorebook-item strong { font-size: 13px !important; }
+            .naa-lorebook-item small, .naa-lorebook-item em { font-size: 12px !important; line-height: 1.4 !important; }
+
+            /* 로어북/에셋 그리드 — 2컬럼 (이전 기본 1컬럼이라 작은 카드만 가능) */
+            .naa-lorebook-grid, .naa-asset-picker-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 8px !important;
+            }
+            .naa-lorebook-card { padding: 6px !important; border-radius: 8px !important; min-height: 0 !important; }
+
+            /* 에셋 메타데이터 행 — 세로 스택 (이미지 위, 내용 아래) */
+            .naa-asset-metadata-row,
+            #naa-character-panel-assets:not(.hidden) .naa-asset-metadata-row {
+                grid-template-columns: minmax(0, 1fr) !important;
+                grid-template-rows: auto auto !important;
+                min-height: 0 !important; border-radius: 8px !important;
+            }
+            .naa-asset-card-side {
+                border-right: 0 !important;
+                border-bottom: 1px solid var(--naa-line, #2c3238) !important;
+                grid-template-rows: auto auto auto !important;
+                min-height: 0 !important;
+            }
+            .naa-asset-card-selected { min-height: 140px !important; }
+
+            /* 아티스트 행 — 단일 컬럼 */
+            .naa-artist-row { grid-template-columns: minmax(0, 1fr) !important; padding: 10px !important; gap: 10px !important; }
+            .naa-artist-row > .naa-inline.compact { grid-template-columns: 1fr !important; }
+
+            /* 헤더 액션 sticky (긴 본문에서도 저장/닫기 접근) */
+            .naa-actions .naa-btn { position: relative !important; }
+
+            /* 에셋 picker 모달 — 풀스크린 */
+            .naa-asset-picker-backdrop { padding: 0 !important; }
+            .naa-asset-picker-modal {
+                width: 100vw !important; max-width: 100vw !important;
+                height: 100vh !important; height: 100dvh !important; max-height: 100dvh !important;
+                border-radius: 0 !important; padding: 0 !important;
+            }
+            .naa-asset-picker-head { padding: 10px 12px env(safe-area-inset-top, 10px) 12px !important; }
+            .naa-asset-picker-body { padding: 10px 12px env(safe-area-inset-bottom, 12px) !important; gap: 10px !important; }
+
+            /* 일반: tap-highlight 제거, 부드러운 스크롤 */
+            * { -webkit-tap-highlight-color: rgba(79,164,255,.15) !important; }
+            .naa-body, .naa-asset-picker-body, .naa-source-picker, .naa-tabs {
+                -webkit-overflow-scrolling: touch !important;
+                overscroll-behavior: contain !important;
+            }
+
+            /* 헬프 박스 — 본문 잘 보이게 */
+            .naa-character-subtab-help-line { font-size: 13px !important; line-height: 1.6 !important; }
+            .naa-character-subtab-help-box { padding: 12px !important; }
+
+            /* 캐릭터 sub-tabs */
+            .naa-character-source-section .naa-character-subtab {
+                min-height: 40px !important; padding: 8px 14px !important;
+                font-size: 13px !important;
+            }
+
+            /* 의상 에디터 — 단일 컬럼 */
+            .naa-main-prompt-with-reference, .naa-outfit-body {
+                grid-template-columns: minmax(0, 1fr) !important;
+            }
+            .naa-character-reference-preview, .naa-outfit-source-wrap,
+            .naa-outfit-source-preview, .naa-outfit-source-empty {
+                width: 100% !important; max-width: 100% !important; min-width: 0 !important;
+            }
+            .naa-outfit-fields { grid-template-columns: minmax(0, 1fr) !important; gap: 10px !important; }
+        }
+        `;
+        document.head.appendChild(style);
+    }
+
     async function initialize() {
+        try { injectMobileFirstOverrides(); } catch (_) {}
         await unregisterKnownUiParts();
         try {
             await loadConfig();
@@ -53560,7 +53801,7 @@ ${embeddedTagTesterBlobImageScript}
             if (existing) existing.remove();
         }
 
-        // [Asset Mommy 1.0.1] 모바일 친화 모달 — 좁은 화면에서 거의 풀스크린.
+        // [Asset Mommy 1.0.2] 모바일 친화 모달 — 좁은 화면에서 거의 풀스크린.
         // 터치 타겟 44px+, 큰 폰트, single column, safe-area-inset 대응.
         function lbxModalShell(innerHtml) {
             lbxRemoveModal();
@@ -53604,7 +53845,7 @@ ${embeddedTagTesterBlobImageScript}
             if (b) b.innerHTML = html;
         }
 
-        // [Asset Mommy 1.0.1] 모든 lb-xnai.lb.extra 인덱스 (중복 정리용)
+        // [Asset Mommy 1.0.2] 모든 lb-xnai.lb.extra 인덱스 (중복 정리용)
         function lbxFindAllExtraIndices(char) {
             const lore = Array.isArray(char && char.globalLore) ? char.globalLore : [];
             const out = [];
@@ -53614,7 +53855,7 @@ ${embeddedTagTesterBlobImageScript}
             return out;
         }
 
-        // [Asset Mommy 1.0.1] 개별 extra 항목 삭제. 같은 dedup 패턴 — 인덱스 무관하게
+        // [Asset Mommy 1.0.2] 개별 extra 항목 삭제. 같은 dedup 패턴 — 인덱스 무관하게
         // 지정 content와 일치하는 항목만 제거 후 setCharacter 전체 save.
         async function lbxDeleteExtraAtIndex(targetIdx) {
             const { char, idx } = await lbxGetActiveCharacterWithIndex();
@@ -53639,7 +53880,7 @@ ${embeddedTagTesterBlobImageScript}
             return fresh;
         }
 
-        // [Asset Mommy 1.0.1] 한방 정리 — 모든 extra 제거
+        // [Asset Mommy 1.0.2] 한방 정리 — 모든 extra 제거
         async function lbxDeleteAllExtras() {
             const { char, idx } = await lbxGetActiveCharacterWithIndex();
             let fresh = null;
@@ -53689,7 +53930,7 @@ ${embeddedTagTesterBlobImageScript}
                 ? '<div style="color:#ffc757;font-size:12px;">⚠ 활성화된 모듈이 감지되지 않았습니다. 등장인물 정보가 모듈에 있다면, 추출 전에 해당 모듈을 채팅/글로벌에 활성화하세요.</div>'
                 : '';
 
-            // [Asset Mommy 1.0.1] manage 섹션 — 기존 lb-xnai.lb.extra 항목 목록 + 삭제
+            // [Asset Mommy 1.0.2] manage 섹션 — 기존 lb-xnai.lb.extra 항목 목록 + 삭제
             const buildManageHtml = (entries) => {
                 if (!entries.length) {
                     return `<div style="background:#1f2418;border:1px solid #3a4a2a;border-radius:8px;padding:10px 12px;color:#9bc28d;font-size:13px;">✓ 현재 캐릭터에 <b>lb-xnai.lb.extra</b> 항목이 없습니다. 아래에서 새로 추출하세요.</div>`;
