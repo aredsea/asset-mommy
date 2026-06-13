@@ -1,10 +1,10 @@
 //@name AssetMommy
-//@display-name Asset Mommy 1.0.6
-//@version 1.0.6
+//@display-name Asset Mommy 1.0.7
+//@version 1.0.7
 //@api 3.0
 //@update-url https://raw.githubusercontent.com/aredsea/asset-mommy/main/asset-mommy.js
 //@description NovelAI 에셋 생성·관리 + 외견 추출기. iOS RisuAI 최적화.
-// Asset Mommy 1.0.6 — fork base: Asset maid 0.9.1 (NovelAIAutoAsset).
+// Asset Mommy 1.0.7 — fork base: Asset maid 0.9.1 (NovelAIAutoAsset).
 // Includes iOS RisuAI fixes: char enrichment via getCharacterFromIndex,
 // dedup lb-xnai.lb.extra, JSON parser robustness, cache invalidation.
 
@@ -34456,7 +34456,7 @@ body.naa-stream-image-guard-active .default-chat-screen .chat-message-container:
             }
         } catch (e) { console.log('[NAA-DB] dump err: ' + (e && e.message)); }
 
-        // [Asset Mommy 1.0.6] enrichment 강화. currentChar를 이름/id로 매칭해
+        // [Asset Mommy 1.0.7] enrichment 강화. currentChar를 이름/id로 매칭해
         // 다중 캐릭터 환경에서도 정확히 currentChar 데이터를 해당 캐릭터에 적용.
         // getCurrentCharacterIndex가 없는 빌드에서도 동작.
         let currentChar = null;
@@ -53011,7 +53011,7 @@ ${embeddedTagTesterBlobImageScript}
         }
     }
 
-    // [Asset Mommy 1.0.6] Spotify 디자인 시스템 전면 적용.
+    // [Asset Mommy 1.0.7] Spotify 디자인 시스템 전면 적용.
     // 토큰: getdesign add spotify (VoltAgent/awesome-design-md) 기반.
     // - 배경: #121212 base / #181818 elevated / #282828 higher / #1f1f1f input
     // - 브랜드: Spotify Green #1ed760 (functional accent only)
@@ -53327,7 +53327,7 @@ ${embeddedTagTesterBlobImageScript}
             *, *::before, *::after { transition: none !important; animation: none !important; }
         }
 
-        /* ===== Asset Mommy 1.0.6 — Contract/burgundy theme killer =====
+        /* ===== Asset Mommy 1.0.7 — Contract/burgundy theme killer =====
            원본 플러그인이 가진 burgundy/wine + gold 테마 element들을
            높은 specificity로 모두 Spotify 디자인으로 강제 변경.
            셀렉터에 .naa-shell 또는 .naa-modal prefix를 추가해 인라인 스타일을 압도. */
@@ -53624,47 +53624,182 @@ ${embeddedTagTesterBlobImageScript}
             .naa-reference-analysis-control .naa-reference-analysis-info { grid-area: info !important; }
             .naa-reference-analysis-control .naa-analysis-image-only-toggle { grid-area: toggle !important; }
 
-            /* 캐릭터 source picker — 작은 카드 + 가로 스크롤 */
+            /* 캐릭터 source picker — 2컬럼 큰 카드 (가로 스크롤 X, 한눈에 보임) */
             .naa-source-picker,
             .naa-character-source-section .naa-character-source-picker {
-                grid-auto-columns: 110px !important;
-                gap: 8px !important;
-                padding: 4px 2px 8px !important;
-                overflow-x: auto !important;
-                -webkit-overflow-scrolling: touch !important;
+                display: grid !important;
+                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+                grid-auto-flow: row !important;
+                grid-auto-columns: unset !important;
+                gap: 10px !important;
+                padding: 8px 2px !important;
+                overflow-x: hidden !important;
+                width: 100% !important;
+                max-width: 100% !important;
             }
             .naa-source-card,
             .naa-character-source-section .naa-character-source-card {
-                min-height: 96px !important; padding: 6px !important; border-radius: 8px !important;
+                width: auto !important; max-width: 100% !important;
+                min-height: 160px !important;
+                padding: 10px !important; border-radius: 10px !important;
+                display: grid !important; gap: 8px !important;
+                grid-template-rows: auto auto auto !important;
             }
             .naa-source-card-thumb,
             .naa-character-source-section .naa-character-source-card .naa-source-card-thumb {
-                height: 72px !important;
+                width: 100% !important;
+                height: 0 !important; padding-bottom: 100% !important;
+                aspect-ratio: 1 !important;
+                border-radius: 8px !important;
+                background-size: cover !important; background-position: center !important;
+            }
+            .naa-source-card strong,
+            .naa-character-source-section .naa-character-source-card strong {
+                font-size: 13px !important;
+                line-height: 1.3 !important;
+                white-space: normal !important;
+                overflow: visible !important;
+                text-overflow: clip !important;
+                display: -webkit-box !important;
+                -webkit-line-clamp: 2 !important;
+                -webkit-box-orient: vertical !important;
+                color: var(--amm-text) !important;
             }
 
-            /* 캐릭터/모듈 행 — padding 줄이고 read-friendly */
+            /* 캐릭터/모듈 행 — padding 키우고 read-friendly */
             .naa-character-row, .naa-character-row[data-naa-prompt-row] {
-                padding: 10px !important; gap: 10px !important; border-radius: 8px !important;
+                padding: 14px !important; gap: 12px !important; border-radius: 10px !important;
             }
             .naa-character-row[data-naa-prompt-row] > .naa-character-head { padding-bottom: 4px !important; }
-            .naa-character-row[data-naa-prompt-row] > .naa-character-head > strong { font-size: 13px !important; padding-top: 0 !important; }
+            .naa-character-row[data-naa-prompt-row] > .naa-character-head > strong {
+                font-size: 15px !important; line-height: 1.3 !important; padding-top: 0 !important;
+                white-space: normal !important; overflow: visible !important;
+            }
 
-            /* 로어북 아이템 — 패딩 키워서 터치 친화 */
+            /* 로어북 아이템 — text wrap, 전체 내용 보이게 */
             .naa-lorebook-item {
-                padding: 12px !important; min-height: 44px !important;
-                grid-template-columns: 24px minmax(0, 1fr) !important;
-                gap: 10px !important;
-                border-radius: 8px !important;
+                padding: 14px !important; min-height: 56px !important;
+                grid-template-columns: 28px minmax(0, 1fr) !important;
+                gap: 12px !important;
+                border-radius: 10px !important;
+                align-items: start !important;
             }
-            .naa-lorebook-item input { width: 22px !important; height: 22px !important; }
-            .naa-lorebook-item strong { font-size: 13px !important; }
-            .naa-lorebook-item small, .naa-lorebook-item em { font-size: 12px !important; line-height: 1.4 !important; }
+            .naa-lorebook-item input { width: 24px !important; height: 24px !important; margin-top: 2px !important; }
+            .naa-lorebook-item span {
+                gap: 6px !important; min-width: 0 !important;
+                display: grid !important; align-content: start !important;
+            }
+            .naa-lorebook-item strong {
+                font-size: 14px !important;
+                line-height: 1.35 !important;
+                color: var(--amm-text) !important;
+                white-space: normal !important;
+                overflow: visible !important;
+                text-overflow: clip !important;
+                word-break: break-word !important;
+                overflow-wrap: anywhere !important;
+            }
+            .naa-lorebook-item small, .naa-lorebook-item em {
+                font-size: 12px !important;
+                line-height: 1.5 !important;
+                color: var(--amm-text-sub) !important;
+                white-space: normal !important;
+                overflow: visible !important;
+                text-overflow: clip !important;
+                display: block !important;
+                -webkit-line-clamp: unset !important;
+                max-width: none !important;
+                word-break: break-word !important;
+                overflow-wrap: anywhere !important;
+            }
 
-            /* 로어북/에셋 그리드 — 2컬럼 (이전 기본 1컬럼이라 작은 카드만 가능) */
+            /* 로어북/에셋 그리드 — 단일 컬럼 (큰 카드, 텍스트 풀로 보임) */
             .naa-lorebook-grid, .naa-asset-picker-grid {
-                grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 8px !important;
+                grid-template-columns: minmax(0, 1fr) !important;
+                gap: 10px !important;
             }
-            .naa-lorebook-card { padding: 6px !important; border-radius: 8px !important; min-height: 0 !important; }
+            .naa-lorebook-card {
+                padding: 12px !important; border-radius: 10px !important;
+                min-height: 0 !important;
+            }
+            .naa-lorebook-card-body strong {
+                font-size: 14px !important; line-height: 1.35 !important;
+                white-space: normal !important; overflow: visible !important;
+            }
+            .naa-lorebook-card-body small {
+                font-size: 12px !important; line-height: 1.5 !important;
+                white-space: normal !important; overflow: visible !important;
+                display: block !important; max-width: none !important;
+                -webkit-line-clamp: unset !important;
+            }
+
+            /* 모듈 선택 카드도 동일 처리 */
+            .naa-source-card,
+            .naa-character-source-card { overflow: visible !important; }
+            .naa-source-meta-tag {
+                white-space: normal !important;
+                overflow: visible !important;
+                text-overflow: clip !important;
+                line-height: 1.3 !important;
+                padding: 4px 10px !important;
+                font-size: 11px !important;
+            }
+
+            /* 에셋&캐릭터 매칭 권장 박스 — 모바일에서도 안내 잘 보이게 */
+            .naa-lorebook-image-filter-recommendation-box {
+                padding: 14px !important;
+                border-radius: 10px !important;
+            }
+            .naa-lorebook-image-filter-recommendation-box .naa-analysis-tool-copy {
+                gap: 6px !important;
+            }
+            .naa-lorebook-image-filter-recommendation-box .naa-analysis-tool-copy strong {
+                font-size: 14px !important; line-height: 1.4 !important;
+                white-space: normal !important; overflow: visible !important;
+                text-overflow: clip !important;
+            }
+            .naa-lorebook-image-filter-recommendation-box .naa-help {
+                font-size: 13px !important; line-height: 1.55 !important;
+                white-space: normal !important; overflow: visible !important;
+                text-overflow: clip !important; max-width: none !important;
+                display: block !important;
+            }
+            .naa-lorebook-image-filter-recommendation-actions,
+            .naa-lorebook-image-filter-actions {
+                margin-top: 10px !important;
+                justify-content: stretch !important;
+            }
+            .naa-lorebook-image-filter-recommendation-actions .naa-btn,
+            .naa-lorebook-image-filter-actions .naa-btn {
+                width: 100% !important;
+            }
+
+            /* analysis tool row 일반 — 짤림 없이 */
+            .naa-analysis-tool-row {
+                grid-template-columns: minmax(0, 1fr) !important;
+                gap: 10px !important; padding: 12px !important;
+            }
+            .naa-analysis-tool-copy strong {
+                font-size: 14px !important;
+                white-space: normal !important; overflow: visible !important;
+                text-overflow: clip !important;
+            }
+            .naa-analysis-tool-copy .naa-help {
+                font-size: 12px !important; line-height: 1.5 !important;
+                white-space: normal !important; overflow: visible !important;
+                text-overflow: clip !important; max-width: none !important;
+            }
+            .naa-analysis-tool-controls,
+            .naa-metadata-analysis-controls {
+                display: flex !important; flex-wrap: wrap !important;
+                gap: 8px !important; width: 100% !important;
+            }
+            .naa-analysis-tool-controls .naa-btn,
+            .naa-metadata-analysis-controls .naa-btn {
+                width: auto !important; min-width: 0 !important;
+                flex: 1 1 120px !important;
+            }
+            .naa-inline-status { flex: 1 1 100% !important; max-width: 100% !important; }
 
             /* 에셋 메타데이터 행 — 세로 스택 (이미지 위, 내용 아래) */
             .naa-asset-metadata-row,
@@ -53726,7 +53861,7 @@ ${embeddedTagTesterBlobImageScript}
             .naa-outfit-fields { grid-template-columns: minmax(0, 1fr) !important; gap: 10px !important; }
         }
         `;
-        // [Asset Mommy 1.0.6] CSS cascade 우선순위 확보.
+        // [Asset Mommy 1.0.7] CSS cascade 우선순위 확보.
         // 원본 플러그인은 modal 안에 <style>을 inline 주입하므로 DOM 순서상 우리보다 늦음 →
         // 같은 specificity일 때 그쪽이 이김. 해결: 우리 style을 body 끝에 두고,
         // MutationObserver로 새 style이 추가될 때마다 우리 것을 다시 끝으로 이동.
@@ -54273,7 +54408,7 @@ ${embeddedTagTesterBlobImageScript}
                     methods.push('setCharacterToIndex(' + idx + ')');
                 } catch (e) { console.log('[LBX-SAVE] setCharacterToIndex err: ' + (e && e.message)); }
             }
-            // [Asset Mommy 1.0.6] ★보안 critical★ — setDatabase 전체 덮어쓰기 패턴 제거.
+            // [Asset Mommy 1.0.7] ★보안 critical★ — setDatabase 전체 덮어쓰기 패턴 제거.
             // RisuAI 보안 업데이트 후 getDatabase()가 plugins 필드를 제외한 stub을 반환하므로,
             // setDatabase(db)로 통째 덮어쓰면 plugins가 undefined가 되어 모든 플러그인이 삭제됨
             // (자기 자신 포함). setCharacter/setCharacterToIndex는 RisuAI 내부에서 안전한
@@ -54309,7 +54444,7 @@ ${embeddedTagTesterBlobImageScript}
             if (existing) existing.remove();
         }
 
-        // [Asset Mommy 1.0.6] 모바일 친화 모달 — 좁은 화면에서 거의 풀스크린.
+        // [Asset Mommy 1.0.7] 모바일 친화 모달 — 좁은 화면에서 거의 풀스크린.
         // 터치 타겟 44px+, 큰 폰트, single column, safe-area-inset 대응.
         function lbxModalShell(innerHtml) {
             lbxRemoveModal();
@@ -54353,7 +54488,7 @@ ${embeddedTagTesterBlobImageScript}
             if (b) b.innerHTML = html;
         }
 
-        // [Asset Mommy 1.0.6] 모든 lb-xnai.lb.extra 인덱스 (중복 정리용)
+        // [Asset Mommy 1.0.7] 모든 lb-xnai.lb.extra 인덱스 (중복 정리용)
         function lbxFindAllExtraIndices(char) {
             const lore = Array.isArray(char && char.globalLore) ? char.globalLore : [];
             const out = [];
@@ -54363,7 +54498,7 @@ ${embeddedTagTesterBlobImageScript}
             return out;
         }
 
-        // [Asset Mommy 1.0.6] 개별 extra 항목 삭제. 같은 dedup 패턴 — 인덱스 무관하게
+        // [Asset Mommy 1.0.7] 개별 extra 항목 삭제. 같은 dedup 패턴 — 인덱스 무관하게
         // 지정 content와 일치하는 항목만 제거 후 setCharacter 전체 save.
         async function lbxDeleteExtraAtIndex(targetIdx) {
             const { char, idx } = await lbxGetActiveCharacterWithIndex();
@@ -54388,7 +54523,7 @@ ${embeddedTagTesterBlobImageScript}
             return fresh;
         }
 
-        // [Asset Mommy 1.0.6] 한방 정리 — 모든 extra 제거
+        // [Asset Mommy 1.0.7] 한방 정리 — 모든 extra 제거
         async function lbxDeleteAllExtras() {
             const { char, idx } = await lbxGetActiveCharacterWithIndex();
             let fresh = null;
@@ -54438,7 +54573,7 @@ ${embeddedTagTesterBlobImageScript}
                 ? '<div style="color:#ffc757;font-size:12px;">⚠ 활성화된 모듈이 감지되지 않았습니다. 등장인물 정보가 모듈에 있다면, 추출 전에 해당 모듈을 채팅/글로벌에 활성화하세요.</div>'
                 : '';
 
-            // [Asset Mommy 1.0.6] manage 섹션 — 기존 lb-xnai.lb.extra 항목 목록 + 삭제
+            // [Asset Mommy 1.0.7] manage 섹션 — 기존 lb-xnai.lb.extra 항목 목록 + 삭제
             const buildManageHtml = (entries) => {
                 if (!entries.length) {
                     return `<div style="background:#1f2418;border:1px solid #3a4a2a;border-radius:8px;padding:10px 12px;color:#9bc28d;font-size:13px;">✓ 현재 캐릭터에 <b>lb-xnai.lb.extra</b> 항목이 없습니다. 아래에서 새로 추출하세요.</div>`;
