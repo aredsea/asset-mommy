@@ -1,6 +1,6 @@
 //@name AssetMommy
-//@display-name Asset Mommy 1.2.6
-//@version 1.2.6
+//@display-name Asset Mommy 1.2.7
+//@version 1.2.7
 //@api 3.0
 //@update-url https://raw.githubusercontent.com/aredsea/asset-mommy/main/asset-mommy.js
 //@description NovelAI 에셋 생성·관리 + 외견 추출기. iOS RisuAI 최적화.
@@ -25186,8 +25186,16 @@ body.naa-stream-image-guard-active .default-chat-screen .chat-message-container:
               }, timeout)
             : null;
         try {
-            // [iOS PATCH] bypass the stream-transfer-broken nativeFetch bridge
-            if (__naaIsIOSWebKit() && typeof Risu.risuFetch === 'function') {
+            // [TRANSPORT] risuFetch(=globalFetch) 우선 경로.
+            // RisuAI 본체의 '기타 봇>이미지 생성'이 NAI를 정상 호출하는 경로가 바로 globalFetch이며,
+            // CORS 우회 + 프록시 지원으로 모든 플랫폼에서 동작한다.
+            // nativeFetch는 iOS RisuAI WebView에서 NAI/스트림 전송이 깨진다(DataCloneError).
+            // 과거엔 __naaIsIOSWebKit() UA 검사로만 risuFetch를 켰는데, iOS 네이티브 래퍼의 UA가
+            // 이 정규식과 안 맞으면(또는 CriOS로 잡히면) nativeFetch로 떨어져 이미지 생성이 실패했다.
+            //   → NAI 이미지 호출은 플랫폼 무관 무조건 risuFetch (callNovelAI가 preferRisuFetch:true 지정).
+            //   ⚠ 단, urlencoded OAuth 토큰 교환(Vertex)은 risuFetch를 못 탄다 → 그 경로는 opt-in 안 함(데스크탑 nativeFetch 유지, iOS는 host 파이프라인 위임).
+            const preferRisu = options.preferRisuFetch === true || __naaIsIOSWebKit();
+            if (preferRisu && typeof Risu.risuFetch === 'function') {
                 return await __naaRisuFetchResponse(url, options, timeout);
             }
             return await Risu.nativeFetch(url, {
@@ -30952,6 +30960,9 @@ body.naa-stream-image-guard-active .default-chat-screen .chat-message-container:
                         Authorization: `Bearer ${apiKey}`,
                     },
                     body: JSON.stringify(body),
+                    // [TRANSPORT] NAI 이미지 호출은 플랫폼 무관 risuFetch 강제 — iOS UA 미스매치로 nativeFetch에 떨어져
+                    // 이미지 생성이 통째로 실패하던 문제 차단. body는 JSON이라 risuFetch shim의 JSON.parse도 안전.
+                    preferRisuFetch: true,
                 },
                 120000,
                 'NovelAI image',
@@ -51196,6 +51207,8 @@ ${embeddedTagTesterBlobImageScript}
                                         Authorization: `Bearer ${apiKey}`,
                                     },
                                     body: JSON.stringify(body),
+                                    // [TRANSPORT] NAI 이미지 호출은 플랫폼 무관 risuFetch 강제 (callNovelAI와 동일).
+                                    preferRisuFetch: true,
                                     ...(requestController
                                         ? { signal: requestController.signal }
                                         : {}),
