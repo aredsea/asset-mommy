@@ -53,6 +53,7 @@ sns_nai: 이미지 태그 사전 스캔 → 매칭 → profile.imageTags 갱신 
 
 ## 버전 이력
 
+- `1.2.8`: 줌 갤러리 버건디 제거 + 상단바 오버플로/사이즈텍스트 클립 수정. iOS RisuAI 아이프레임이 데스크탑 폭으로 보고돼 `@media(max-width:600px)` 모바일 규칙이 안 먹던 문제 → 뷰포트 무관 `!important` 오버라이드로 검정/녹색 테마 강제, 닫기 버튼 줄바꿈 처리, 사이즈 셀렉트 폭 자동. display-name에 버전 표기(목록에서 로드된 버전 확인용).
 - `1.2.7`: ★NAI 이미지 생성 핵심 수정★ NAI 호출 전송 계층을 항상 `risuFetch`(=globalFetch)로 강제. 기존엔 iOS UA 정규식이 맞을 때만 risuFetch를 쓰고 아니면 `nativeFetch`로 떨어졌는데, 아이폰 RisuAI 네이티브 WebView의 UA가 이 검사와 안 맞아 이미지 생성이 통째로 실패했음. 본체 "기타 봇>이미지 생성"이 NAI를 정상 호출하는 경로가 바로 globalFetch라 모든 플랫폼에서 동작. (Vertex OAuth 토큰 교환은 risuFetch 비호환이라 기존 경로 유지)
 - `1.2.5`: sns_nai 연동(헤딩 char.name 강제) + 줌 갤러리 모바일 + 의상별 추출.
 - `1.0.0`: 초기 릴리즈.
