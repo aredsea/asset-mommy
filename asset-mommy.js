@@ -1,6 +1,6 @@
 //@name AssetMommy
-//@display-name Asset Mommy 1.2.9
-//@version 1.2.9
+//@display-name Asset Mommy 1.3.0
+//@version 1.3.0
 //@api 3.0
 //@update-url https://raw.githubusercontent.com/aredsea/asset-mommy/main/asset-mommy.js
 //@description NovelAI 에셋 생성·관리 + 외견 추출기. iOS RisuAI 최적화.
@@ -21896,6 +21896,180 @@ body.naa-stream-image-guard-active .default-chat-screen .chat-message-container:
             const msg = error && error.message ? error.message : String(error);
             if (typeof Risu.alertError === 'function') await Risu.alertError('레퍼런스 지정 실패: ' + msg);
             else if (typeof Risu.alert === 'function') await Risu.alert('레퍼런스 지정 실패: ' + msg);
+        }
+    }
+
+    // 현재 캐릭터의 자체 이미지 후보(아바타 + additionalAssets)를 모은다.
+    async function naaCollectCharacterReferenceCandidates() {
+        let idx = -1;
+        try { idx = await Risu.getCurrentCharacterIndex(); } catch (_) {}
+        let char = null;
+        try {
+            if (idx >= 0 && typeof Risu.getCharacterFromIndex === 'function') {
+                char = await Risu.getCharacterFromIndex(idx);
+            }
+        } catch (_) {}
+        if (!char) { try { char = await Risu.getCharacter(); } catch (_) {} }
+        if (!char) return { idx, char: null, assets: [] };
+        const list = [];
+        const seen = new Set();
+        const add = (a) => {
+            if (!a || !a.key) return;
+            const k = safeString(a.key) + '::' + safeString(a.ext);
+            if (seen.has(k)) return;
+            seen.add(k);
+            list.push(a);
+        };
+        try { add(characterPreviewAsset(char)); } catch (_) {}
+        try { for (const a of normalizeCharacterImageAssets(char)) add(a); } catch (_) {}
+        return { idx, char, assets: list };
+    }
+
+    async function naaReadCurrentSnsReference() {
+        let char = null;
+        try {
+            const i = await Risu.getCurrentCharacterIndex();
+            if (i >= 0 && typeof Risu.getCharacterFromIndex === 'function') char = await Risu.getCharacterFromIndex(i);
+        } catch (_) {}
+        if (!char) { try { char = await Risu.getCharacter(); } catch (_) {} }
+        if (!char || !Array.isArray(char.globalLore)) return null;
+        const e = char.globalLore.find(
+            (x) => safeString(x && x.comment).trim().toLowerCase() === LBX_REF_COMMENT,
+        );
+        return e && typeof e.content === 'string' && e.content.trim().length > 64 ? e.content.trim() : null;
+    }
+
+    async function naaClearCharacterSnsReference() {
+        let idx = -1;
+        try { idx = await Risu.getCurrentCharacterIndex(); } catch (_) {}
+        let char = null;
+        try {
+            if (idx >= 0 && typeof Risu.getCharacterFromIndex === 'function') char = await Risu.getCharacterFromIndex(idx);
+        } catch (_) {}
+        if (!char) { try { char = await Risu.getCharacter(); } catch (_) {} }
+        if (!char) throw new Error('현재 캐릭터를 찾을 수 없습니다.');
+        if (!Array.isArray(char.globalLore)) return true;
+        char.globalLore = char.globalLore.filter(
+            (e) => safeString(e && e.comment).trim().toLowerCase() !== LBX_REF_COMMENT,
+        );
+        let saved = false;
+        if (typeof Risu.setCharacter === 'function') { try { await Risu.setCharacter(char); saved = true; } catch (_) {} }
+        if (idx >= 0 && typeof Risu.setCharacterToIndex === 'function') { try { await Risu.setCharacterToIndex(idx, char); saved = true; } catch (_) {} }
+        if (!saved && typeof Risu.setChar === 'function') { try { await Risu.setChar(char); saved = true; } catch (_) {} }
+        if (!saved) throw new Error('캐릭터 저장 API를 사용할 수 없습니다.');
+        return true;
+    }
+
+    // 캐릭터 자체 이미지에서 SNS 레퍼런스를 고르는 독립 모달 (줌 갤러리 불필요).
+    async function openSnsReferencePickerModal() {
+        try {
+            const existing = document.getElementById('naa-sns-ref-modal');
+            if (existing) existing.remove();
+            const { assets } = await naaCollectCharacterReferenceCandidates();
+
+            const wrap = document.createElement('div');
+            wrap.id = 'naa-sns-ref-modal';
+            wrap.style.cssText = 'position:fixed;inset:0;z-index:2147483646;display:grid;place-items:center;background:rgba(0,0,0,.72);padding:10px;box-sizing:border-box;-webkit-tap-highlight-color:transparent;';
+            const card = document.createElement('div');
+            card.style.cssText = 'width:min(680px,calc(100vw - 20px));max-height:calc(100vh - 40px);display:flex;flex-direction:column;background:#161616;color:#eaeaea;border:1px solid #2d2d2d;border-radius:12px;overflow:hidden;font:14px -apple-system,BlinkMacSystemFont,system-ui,sans-serif;';
+
+            const head = document.createElement('div');
+            head.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 16px;border-bottom:1px solid #262626;background:#1c1c1c;';
+            const title = document.createElement('strong');
+            title.textContent = 'SNS 레퍼런스 지정';
+            title.style.cssText = 'color:#1ed760;font-size:15px;';
+            const closeBtn = document.createElement('button');
+            closeBtn.type = 'button';
+            closeBtn.textContent = '✕';
+            closeBtn.style.cssText = 'flex:0 0 auto;width:36px;height:36px;border:1px solid #3a3a3a;background:#262626;color:#eee;border-radius:8px;cursor:pointer;font-size:16px;';
+            closeBtn.addEventListener('click', () => wrap.remove());
+            head.appendChild(title);
+            head.appendChild(closeBtn);
+
+            const intro = document.createElement('div');
+            intro.style.cssText = 'padding:10px 16px;color:#9a9a9a;font-size:12px;line-height:1.5;border-bottom:1px solid #222;';
+            intro.textContent = '이 캐릭터의 이미지 중 하나를 골라 SNS(NAI) 레퍼런스로 지정합니다. sns_nai가 이미지 생성 시 그림체·캐릭터 유지에 사용합니다. NAI V4.5 모델 필요, 캐릭터당 1장.';
+
+            const body = document.createElement('div');
+            body.style.cssText = 'padding:14px 16px;overflow:auto;display:flex;flex-wrap:wrap;gap:10px;align-content:flex-start;-webkit-overflow-scrolling:touch;';
+            if (!assets.length) {
+                body.innerHTML = '<div style="color:#bbb;font-size:13px;padding:18px 4px;line-height:1.6;">이 캐릭터에서 사용할 수 있는 이미지를 찾지 못했습니다.<br>캐릭터에 아바타나 추가 에셋(additionalAssets)이 있는지 확인해주세요.</div>';
+            }
+
+            const footer = document.createElement('div');
+            footer.style.cssText = 'display:flex;gap:8px;justify-content:space-between;align-items:center;padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));border-top:1px solid #262626;background:#1a1a1a;flex-wrap:wrap;';
+            const statusEl = document.createElement('div');
+            statusEl.style.cssText = 'color:#9a9a9a;font-size:12px;min-width:0;flex:1 1 auto;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+            statusEl.textContent = '현재 레퍼런스: 확인 중…';
+            const clearBtn = document.createElement('button');
+            clearBtn.type = 'button';
+            clearBtn.textContent = '레퍼런스 해제';
+            clearBtn.style.cssText = 'flex:0 0 auto;border:1px solid #7a2a2a;background:#2a1515;color:#ff9b9b;border-radius:8px;padding:8px 12px;cursor:pointer;font-size:13px;';
+            clearBtn.addEventListener('click', async () => {
+                try {
+                    await naaClearCharacterSnsReference();
+                    statusEl.textContent = '현재 레퍼런스: 없음 (해제됨)';
+                    if (typeof Risu.alert === 'function') await Risu.alert('SNS 레퍼런스를 해제했습니다.');
+                } catch (e) {
+                    if (typeof Risu.alertError === 'function') await Risu.alertError('해제 실패: ' + (e && e.message ? e.message : e));
+                }
+            });
+            footer.appendChild(statusEl);
+            footer.appendChild(clearBtn);
+
+            card.appendChild(head);
+            card.appendChild(intro);
+            card.appendChild(body);
+            card.appendChild(footer);
+            wrap.appendChild(card);
+            wrap.addEventListener('click', (e) => { if (e.target === wrap) wrap.remove(); });
+            document.body.appendChild(wrap);
+
+            naaReadCurrentSnsReference()
+                .then((cur) => { statusEl.textContent = cur ? '현재 레퍼런스: 지정됨' : '현재 레퍼런스: 없음'; })
+                .catch(() => { statusEl.textContent = '현재 레퍼런스: 확인 불가'; });
+
+            for (const asset of assets) {
+                const tile = document.createElement('button');
+                tile.type = 'button';
+                tile.style.cssText = 'flex:0 0 auto;width:104px;height:150px;border:1px solid #333;background:#0e0e0e;border-radius:8px;overflow:hidden;cursor:pointer;padding:0;position:relative;display:flex;align-items:center;justify-content:center;';
+                const img = document.createElement('img');
+                img.alt = asset.name || '';
+                img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;';
+                tile.appendChild(img);
+                const label = document.createElement('div');
+                label.textContent = asset.name || '';
+                label.style.cssText = 'position:absolute;left:0;right:0;bottom:0;font-size:10px;color:#ddd;background:rgba(0,0,0,.62);padding:2px 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+                tile.appendChild(label);
+                body.appendChild(tile);
+
+                (async () => {
+                    try {
+                        const url = await loadAssetPickerPreviewBlobUrlCached(asset);
+                        if (url) img.src = url;
+                    } catch (_) {}
+                })();
+
+                tile.addEventListener('click', async () => {
+                    tile.style.borderColor = '#1ed760';
+                    statusEl.textContent = '지정 중…';
+                    try {
+                        const bytes = await readAssetEntryBytes(asset);
+                        if (!bytes || !bytes.length) throw new Error('이미지 바이트를 읽을 수 없습니다.');
+                        const b64 = await naaBuildCompactReferenceBase64(bytes, asset.ext);
+                        await naaWriteCharacterSnsReference(b64);
+                        if (typeof Risu.alert === 'function') {
+                            await Risu.alert('"' + (asset.name || '이미지') + '"을(를) SNS 레퍼런스로 지정했습니다. sns_nai에서 이 캐릭터 이미지 생성 시 그림체 유지에 사용됩니다. (NAI V4.5 모델 필요)');
+                        }
+                        wrap.remove();
+                    } catch (e) {
+                        statusEl.textContent = '지정 실패';
+                        if (typeof Risu.alertError === 'function') await Risu.alertError('레퍼런스 지정 실패: ' + (e && e.message ? e.message : e));
+                    }
+                });
+            }
+        } catch (e) {
+            if (typeof Risu.alertError === 'function') await Risu.alertError('레퍼런스 화면 오류: ' + (e && e.message ? e.message : e));
         }
     }
 
@@ -52418,6 +52592,17 @@ ${embeddedTagTesterBlobImageScript}
                                                         <span class="naa-inline-status" data-naa-settings-analysis-status="image-filter" data-tone="${escapeHtml(imageFilterAnalysisStatus.tone)}" title="${escapeHtml(imageFilterAnalysisStatus.text)}" aria-label="${escapeHtml(imageFilterAnalysisStatus.text)}" role="status" aria-live="polite">${settingsAnalysisStatusHtml(imageFilterAnalysisStatus)}</span>
                                                     </div>
                                                 </div>
+                                                <div class="naa-analysis-tool-row">
+                                                    <div class="naa-analysis-tool-copy">
+                                                        <strong>SNS 레퍼런스 (sns_nai 연동)</strong>
+                                                        <p class="naa-help">이 캐릭터의 이미지를 골라 NAI 레퍼런스로 지정합니다. sns_nai가 이미지 생성 시 그림체·캐릭터를 유지하는 데 사용합니다(NAI V4.5 모델 필요, 캐릭터당 1장).</p>
+                                                    </div>
+                                                    <div class="naa-analysis-tool-action-grid">
+                                                        <div class="naa-analysis-tool-controls">
+                                                            <button class="naa-btn naa-action-control" id="naa-sns-ref-open-btn" type="button">레퍼런스 지정…</button>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                         ${
@@ -52552,6 +52737,15 @@ ${embeddedTagTesterBlobImageScript}
                 event.stopPropagation();
                 void openCharxSettingsSourceGridModal();
             }));
+        // [Asset Mommy↔sns_nai] SNS 레퍼런스 지정 버튼
+        const snsRefBtn = document.getElementById('naa-sns-ref-open-btn');
+        if (snsRefBtn) {
+            snsRefBtn.addEventListener('click', (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                void openSnsReferencePickerModal();
+            });
+        }
         document.querySelectorAll('[data-naa-setting-subtab]').forEach((tab) => {
             tab.addEventListener('click', (event) => {
                 event.preventDefault();
