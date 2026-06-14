@@ -1,6 +1,6 @@
 //@name AssetMommy
-//@display-name Asset Mommy 1.2.8
-//@version 1.2.8
+//@display-name Asset Mommy 1.2.9
+//@version 1.2.9
 //@api 3.0
 //@update-url https://raw.githubusercontent.com/aredsea/asset-mommy/main/asset-mommy.js
 //@description NovelAI 에셋 생성·관리 + 외견 추출기. iOS RisuAI 최적화.
@@ -20109,6 +20109,7 @@ body.naa-stream-image-guard-active .default-chat-screen .chat-message-container:
                 regenerateMessage,
                 regenerateSizePresetId,
             ) +
+            zoomSnsReferenceControlHtml() +
             zoomPromptControlHtml(canShowPromptPanel, Boolean(state?.promptPanelOpen)) +
             zoomSeedControlHtmlV2(seed, promptKey, seedFixedState);
         const generatedListHtml = zoomRailItemsHtml(items, 'select-gallery', selectedIndex);
@@ -21761,9 +21762,150 @@ body.naa-stream-image-guard-active .default-chat-screen .chat-message-container:
         return true;
     }
 
+    // ─────────────────────────────────────────────────────────────────────
+    //  [Asset Mommy ↔ sns_nai 연동] SNS 캐릭터 레퍼런스 지정
+    //  현재 줌 갤러리에서 보고 있는 이미지를 "캐릭터 레퍼런스"로 지정한다.
+    //  캐릭터 globalLore에 comment 'lb-xnai.ref' 항목(base64)으로 저장 → sns_nai가
+    //  이를 읽어 NAI director reference로 사용(그림체+캐릭터 유지, 상황만 태그로 변동).
+    //  캐릭터당 1장. ★scoped write만 사용(setCharacter/ToIndex) — setDatabase 전체
+    //  덮어쓰기는 플러그인 전체 삭제를 유발하므로 절대 금지.
+    // ─────────────────────────────────────────────────────────────────────
+    const LBX_REF_COMMENT = 'lb-xnai.ref';
+
+    function zoomSnsReferenceControlHtml() {
+        return (
+            '<button class="naa-zoom-sns-reference-button naa-zoom-action" data-naa-zoom-action="set-sns-reference" ' +
+            'title="현재 이미지를 이 캐릭터의 SNS(NAI) 레퍼런스로 지정합니다. sns_nai가 그림체 유지에 사용." ' +
+            'style="height:32px;border:1px solid #3a3a3a;background:#262626;color:#eaeaea;border-radius:5px;padding:6px 10px;font:12px Consolas,Menlo,monospace;cursor:pointer;white-space:nowrap;box-sizing:border-box;">SNS 레퍼런스</button>'
+        );
+    }
+
+    async function naaImageSrcToBytes(src) {
+        const s = safeString(src).trim();
+        if (!s || s === NAA_ZOOM_PLACEHOLDER_IMAGE) return null;
+        // data:/blob: URL은 iframe 내 표준 fetch로 바이트 획득
+        try {
+            const resp = await fetch(s);
+            if (resp && resp.ok) return new Uint8Array(await resp.arrayBuffer());
+        } catch (_) {}
+        // 폴백: risuFetch(=globalFetch)
+        try {
+            if (typeof Risu !== 'undefined' && typeof Risu.risuFetch === 'function') {
+                const r = await Risu.risuFetch(s, { method: 'GET', rawResponse: true });
+                if (r && r.data instanceof Uint8Array) return r.data;
+            }
+        } catch (_) {}
+        return null;
+    }
+
+    async function naaBuildCompactReferenceBase64(bytes, ext = '') {
+        // 캐논 비율로 레터박스(흰 배경 contain) + 긴 변 832로 축소 → PNG base64.
+        // 로어북에 저장 가능한 크기로 줄이면서 NAI director reference 호환(PNG) 유지.
+        const image = await imageElementFromBytes(bytes, ext);
+        const sw = image.naturalWidth || image.width || 0;
+        const sh = image.naturalHeight || image.height || 0;
+        if (!sw || !sh) throw new Error('레퍼런스 이미지 크기를 읽을 수 없습니다.');
+        const canon = characterReferenceCanvasForSize(sw, sh);
+        const LONG = 832;
+        const scale = Math.min(1, LONG / Math.max(canon.width, canon.height));
+        const cw = Math.max(1, Math.round(canon.width * scale));
+        const ch = Math.max(1, Math.round(canon.height * scale));
+        const canvas = document.createElement('canvas');
+        canvas.width = cw;
+        canvas.height = ch;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) throw new Error('Canvas 2D 컨텍스트를 사용할 수 없습니다.');
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, cw, ch);
+        const r = Math.min(cw / sw, ch / sh);
+        const dw = sw * r;
+        const dh = sh * r;
+        ctx.drawImage(image, (cw - dw) / 2, (ch - dh) / 2, dw, dh);
+        const pngBytes = await canvasToPngBytes(canvas);
+        return arrayBufferToBase64(pngBytes);
+    }
+
+    async function naaWriteCharacterSnsReference(base64) {
+        if (typeof Risu === 'undefined' || typeof Risu.getCharacter !== 'function') {
+            throw new Error('캐릭터 API를 사용할 수 없습니다.');
+        }
+        let idx = -1;
+        try { idx = await Risu.getCurrentCharacterIndex(); } catch (_) {}
+        let char = null;
+        try {
+            if (idx >= 0 && typeof Risu.getCharacterFromIndex === 'function') {
+                char = await Risu.getCharacterFromIndex(idx);
+            }
+        } catch (_) {}
+        if (!char) char = await Risu.getCharacter();
+        if (!char) throw new Error('현재 캐릭터를 찾을 수 없습니다.');
+        if (!Array.isArray(char.globalLore)) char.globalLore = [];
+        // 기존 ref 항목 제거 후 1개만 유지 (캐릭터당 1장)
+        char.globalLore = char.globalLore.filter(
+            (e) => safeString(e && e.comment).trim().toLowerCase() !== LBX_REF_COMMENT,
+        );
+        char.globalLore.push({
+            key: 'lb-xnai-ref',
+            secondkey: '',
+            keys: ['lb-xnai-ref'],
+            insertorder: 100,
+            insertion_order: 100,
+            name: LBX_REF_COMMENT,
+            comment: LBX_REF_COMMENT,
+            content: base64,
+            mode: 'normal',
+            enabled: false, // ★LLM 컨텍스트에 절대 주입 안 됨 (저장 전용)
+            alwaysActive: false,
+            constant: false,
+            selective: true,
+            useRegex: false,
+            use_regex: false,
+            case_sensitive: false,
+            bookVersion: 2,
+            extensions: {},
+        });
+        // ★scoped write only★
+        let saved = false;
+        if (typeof Risu.setCharacter === 'function') {
+            try { await Risu.setCharacter(char); saved = true; } catch (_) {}
+        }
+        if (idx >= 0 && typeof Risu.setCharacterToIndex === 'function') {
+            try { await Risu.setCharacterToIndex(idx, char); saved = true; } catch (_) {}
+        }
+        if (!saved && typeof Risu.setChar === 'function') {
+            try { await Risu.setChar(char); saved = true; } catch (_) {}
+        }
+        if (!saved) throw new Error('캐릭터 저장 API를 사용할 수 없습니다.');
+        return true;
+    }
+
+    async function handleZoomSetSnsReference() {
+        try {
+            const display = zoomGalleryDisplayItem();
+            const src = zoomPreviewImageSrc(display?.imgSrc);
+            const bytes = await naaImageSrcToBytes(src);
+            if (!bytes || !bytes.length) {
+                throw new Error('현재 이미지를 읽을 수 없습니다. 실제 이미지가 표시된 상태에서 눌러주세요.');
+            }
+            const base64 = await naaBuildCompactReferenceBase64(bytes);
+            await naaWriteCharacterSnsReference(base64);
+            if (typeof Risu.alert === 'function') {
+                await Risu.alert('이 이미지를 SNS(NAI) 캐릭터 레퍼런스로 지정했습니다. sns_nai에서 이 캐릭터의 이미지 생성 시 그림체 유지에 사용됩니다. (NAI V4.5 모델 필요)');
+            }
+        } catch (error) {
+            const msg = error && error.message ? error.message : String(error);
+            if (typeof Risu.alertError === 'function') await Risu.alertError('레퍼런스 지정 실패: ' + msg);
+            else if (typeof Risu.alert === 'function') await Risu.alert('레퍼런스 지정 실패: ' + msg);
+        }
+    }
+
     async function handleNaaZoomAction(rootDoc, actionInfo) {
         const action = safeString(actionInfo?.action).trim();
         if (!action || !naaZoomGalleryState) return false;
+        if (action === 'set-sns-reference') {
+            await handleZoomSetSnsReference();
+            return true;
+        }
         const items = Array.isArray(naaZoomGalleryState.items) ? naaZoomGalleryState.items : [];
         if (action === 'regenerate') {
             const liveSizeId = await selectedZoomSizePresetIdFromRoot(rootDoc);
